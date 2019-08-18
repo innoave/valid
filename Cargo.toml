@@ -14,7 +14,14 @@ all-features = true
 [badges]
 maintenance = { status = "experimental" }
 
+[features]
+default = []
+serde1 = ["serde", "bigdecimal/serde", "chrono/serde"]
+
 [dependencies]
+bigdecimal = { version = "0.1", optional = true }
+chrono = { version = "0.4", optional = true }
+serde = { version = "1", optional = true, features = ["derive"] }
 
 [dev-dependencies]
 proptest = "0.9"
