@@ -1,0 +1,21 @@
+[package]
+name = "valid"
+version = "0.1.0"  # remember to update html_root_url
+authors = ["haraldmaida"]
+license = "MIT/Apache-2.0"
+
+description = "Validate custom types by composing primitive validator functions"
+
+edition = "2018"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[badges]
+maintenance = { status = "experimental" }
+
+[dependencies]
+
+[dev-dependencies]
+proptest = "0.9"
+version-sync = "0.8"
