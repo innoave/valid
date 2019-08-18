@@ -77,11 +77,11 @@ mod validation {
     fn validation_of_type_that_does_not_implement_partial_eq() {
         struct TypeWithoutPartialEqImpl(i32);
 
-        let value = Validation::Successful(TypeWithoutPartialEqImpl(42));
+        let value = Validation::Success(TypeWithoutPartialEqImpl(42));
 
         match value {
-            Validation::Successful(val) => assert_eq!(val.0, 42),
-            Validation::Failed(_) => {}
+            Validation::Success(val) => assert_eq!(val.0, 42),
+            Validation::Failure(_) => {}
         }
     }
 
@@ -90,8 +90,8 @@ mod validation {
         #[derive(Debug, PartialEq)]
         struct TypeWithPartialEqImpl(i32);
 
-        let value = Validation::Successful(TypeWithPartialEqImpl(42));
+        let value = Validation::Success(TypeWithPartialEqImpl(42));
 
-        assert_eq!(value, Validation::Successful(TypeWithPartialEqImpl(42)));
+        assert_eq!(value, Validation::Success(TypeWithPartialEqImpl(42)));
     }
 }
