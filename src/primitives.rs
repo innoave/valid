@@ -4,6 +4,10 @@ use std::borrow::Cow;
 pub const INVALID_LENGTH_MAX: &str = "invalid.length.max";
 pub const INVALID_LENGTH_MIN: &str = "invalid.length.min";
 
+pub trait HasLength {
+    fn length(&self) -> usize;
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Length {
     Max(usize),
@@ -41,22 +45,39 @@ impl Length {
     }
 }
 
-impl Validate<Length> for String {
+impl<T> Validate<Length> for T
+where
+    T: HasLength,
+{
     fn validate(self, name: impl Into<Cow<'static, str>>, constraint: &Length) -> Validation<Self> {
-        if let Some(code) = constraint.validate(self.len()) {
-            Validation::Failure(vec![invalid_value(code, name, self.len())])
+        if let Some(code) = constraint.validate(self.length()) {
+            Validation::Failure(vec![invalid_value(code, name, self.length())])
         } else {
             Validation::Success(self)
         }
     }
 }
 
-impl<T> Validate<Length> for Vec<T> {
-    fn validate(self, name: impl Into<Cow<'static, str>>, constraint: &Length) -> Validation<Self> {
-        if let Some(code) = constraint.validate(self.len()) {
-            Validation::Failure(vec![invalid_value(code, name, self.len())])
-        } else {
-            Validation::Success(self)
-        }
+impl HasLength for String {
+    fn length(&self) -> usize {
+        self.len()
+    }
+}
+
+impl HasLength for &str {
+    fn length(&self) -> usize {
+        self.len()
+    }
+}
+
+impl<T> HasLength for Vec<T> {
+    fn length(&self) -> usize {
+        self.len()
+    }
+}
+
+impl<T> HasLength for &[T] {
+    fn length(&self) -> usize {
+        self.len()
     }
 }
