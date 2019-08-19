@@ -16,27 +16,27 @@ pub enum Length {
 }
 
 impl Length {
-    pub fn validate(&self, length: usize) -> Option<&'static str> {
+    pub fn validate(&self, length: usize) -> Option<(&'static str, usize)> {
         match *self {
             Length::Max(max) => {
                 if length > max {
-                    Some(INVALID_LENGTH_MAX)
+                    Some((INVALID_LENGTH_MAX, max))
                 } else {
                     None
                 }
             }
             Length::Min(min) => {
                 if length < min {
-                    Some(INVALID_LENGTH_MIN)
+                    Some((INVALID_LENGTH_MIN, min))
                 } else {
                     None
                 }
             }
             Length::MinMax(min, max) => {
                 if length < min {
-                    Some(INVALID_LENGTH_MIN)
+                    Some((INVALID_LENGTH_MIN, min))
                 } else if length > max {
-                    Some(INVALID_LENGTH_MAX)
+                    Some((INVALID_LENGTH_MAX, max))
                 } else {
                     None
                 }
@@ -50,8 +50,8 @@ where
     T: HasLength,
 {
     fn validate(self, name: impl Into<Cow<'static, str>>, constraint: &Length) -> Validation<Self> {
-        if let Some(code) = constraint.validate(self.length()) {
-            Validation::Failure(vec![invalid_value(code, name, self.length())])
+        if let Some((code, expected)) = constraint.validate(self.length()) {
+            Validation::Failure(vec![invalid_value(code, name, self.length(), expected)])
         } else {
             Validation::Success(self)
         }

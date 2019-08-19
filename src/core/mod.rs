@@ -176,12 +176,19 @@ impl From<DateTime<Utc>> for Value {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Field {
     pub name: Cow<'static, str>,
-    pub value: Option<Value>,
+    pub actual: Option<Value>,
+    pub expected: Option<Value>,
 }
 
 impl Display for Field {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}={}", self.name, option_to_string(self.value.as_ref()))
+        write!(
+            f,
+            "field: {}, actual: {}, expected: {}",
+            self.name,
+            option_to_string(self.actual.as_ref()),
+            option_to_string(self.expected.as_ref())
+        )
     }
 }
 
@@ -221,10 +228,11 @@ impl Display for InvalidValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} of {} which is {}",
+            "{} of {} which is {}, expected it to be {}",
             self.code,
             self.field.name,
-            option_to_string(self.field.value.as_ref())
+            option_to_string(self.field.actual.as_ref()),
+            option_to_string(self.field.expected.as_ref())
         )
     }
 }
@@ -243,9 +251,9 @@ impl Display for InvalidRelation {
             "{} of {} which is {} and {} which is {}",
             self.code,
             self.field1.name,
-            option_to_string(self.field1.value.as_ref()),
+            option_to_string(self.field1.actual.as_ref()),
             self.field2.name,
-            option_to_string(self.field2.value.as_ref())
+            option_to_string(self.field2.actual.as_ref())
         )
     }
 }
@@ -422,13 +430,15 @@ impl<T> Validation<T> {
 pub fn invalid_value(
     code: impl Into<Cow<'static, str>>,
     field_name: impl Into<Cow<'static, str>>,
-    value: impl Into<Value>,
+    actual_value: impl Into<Value>,
+    expected_value: impl Into<Value>,
 ) -> ConstraintViolation {
     ConstraintViolation::Field(InvalidValue {
         code: code.into(),
         field: Field {
             name: field_name.into(),
-            value: Some(value.into()),
+            actual: Some(actual_value.into()),
+            expected: Some(expected_value.into()),
         },
     })
 }
@@ -436,13 +446,15 @@ pub fn invalid_value(
 pub fn invalid_optional_value(
     code: impl Into<Cow<'static, str>>,
     field_name: impl Into<Cow<'static, str>>,
-    value: Option<Value>,
+    actual: Option<Value>,
+    expected: Option<Value>,
 ) -> ConstraintViolation {
     ConstraintViolation::Field(InvalidValue {
         code: code.into(),
         field: Field {
             name: field_name.into(),
-            value,
+            actual,
+            expected,
         },
     })
 }
