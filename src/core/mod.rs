@@ -1,3 +1,5 @@
+//! The core API of the `valid` crate.
+
 #[cfg(feature = "bigdecimal")]
 use bigdecimal::BigDecimal;
 #[cfg(feature = "chrono")]
@@ -5,30 +7,31 @@ use chrono::{DateTime, NaiveDate, Utc};
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-
-pub fn fail(message: Option<Cow<'static, str>>, violation: ConstraintViolation) -> ValidationError {
-    ValidationError {
-        message,
-        violations: vec![violation],
-    }
-}
-
-pub fn invalid_value(
-    code: Cow<'static, str>,
-    field_name: Cow<'static, str>,
-    value: impl Into<Value>,
-) -> ConstraintViolation {
-    ConstraintViolation::Field(InvalidValue {
-        code,
-        field: Field {
-            name: field_name,
-            value: value.into(),
-        },
-    })
-}
+use std::error::Error;
+use std::fmt;
+use std::fmt::{Display, Write};
+use std::ops::Deref;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Validated<T>(T);
+
+impl<T> Validated<T> {
+    pub fn unwrap(self) -> T {
+        self.0
+    }
+}
+
+impl<T> Deref for Validated<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+pub trait Validate<C>: Sized {
+    fn validate(self, name: impl Into<Cow<'static, str>>, constraint: &C) -> Validation<Self>;
+}
 
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
@@ -44,6 +47,24 @@ pub enum Value {
     Date(NaiveDate),
     #[cfg(feature = "chrono")]
     DateTime(DateTime<Utc>),
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::String(value) => write!(f, "{}", value),
+            Value::Integer(value) => write!(f, "{}", value),
+            Value::Long(value) => write!(f, "{}", value),
+            Value::Float(value) => write!(f, "{}", value),
+            Value::Double(value) => write!(f, "{}", value),
+            #[cfg(feature = "bigdecimal")]
+            Value::Decimal(value) => write!(f, "{}", value),
+            #[cfg(feature = "chrono")]
+            Value::Date(value) => write!(f, "{}", value),
+            #[cfg(feature = "chrono")]
+            Value::DateTime(value) => write!(f, "{}", value),
+        }
+    }
 }
 
 impl From<String> for Value {
@@ -98,6 +119,26 @@ impl From<u32> for Value {
     }
 }
 
+impl From<isize> for Value {
+    fn from(value: isize) -> Self {
+        if value > i32::max_value() as isize {
+            Value::Long(value as i64)
+        } else {
+            Value::Integer(value as i32)
+        }
+    }
+}
+
+impl From<usize> for Value {
+    fn from(value: usize) -> Self {
+        if value > i32::max_value() as usize {
+            Value::Long(value as i64)
+        } else {
+            Value::Integer(value as i32)
+        }
+    }
+}
+
 impl From<f32> for Value {
     fn from(value: f32) -> Self {
         Value::Float(value)
@@ -135,14 +176,38 @@ impl From<DateTime<Utc>> for Value {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Field {
     pub name: Cow<'static, str>,
-    pub value: Value,
+    pub value: Option<Value>,
 }
 
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
-#[derive(Debug, Clone, PartialEq)]
-pub struct OptionalField {
-    pub name: Cow<'static, str>,
-    pub value: Option<Value>,
+impl Display for Field {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}={}", self.name, option_to_string(self.value.as_ref()))
+    }
+}
+
+fn option_to_string<T: Display>(optional_value: Option<&T>) -> String {
+    match optional_value {
+        Some(value) => value.to_string(),
+        None => "(n.a.)".to_string(),
+    }
+}
+
+fn array_to_string<T: Display>(array: &[T]) -> String {
+    let separator = ", ";
+    let len = array.len();
+    let mut iter = array.iter();
+    match iter.next() {
+        None => String::new(),
+        Some(first_elem) => {
+            let mut result = String::with_capacity(len * separator.len());
+            write!(&mut result, "{}", first_elem).unwrap();
+            for elem in iter {
+                result.push_str(separator);
+                write!(&mut result, "{}", elem).unwrap();
+            }
+            result
+        }
+    }
 }
 
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
@@ -152,11 +217,37 @@ pub struct InvalidValue {
     pub field: Field,
 }
 
+impl Display for InvalidValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} of {} which is {}",
+            self.code,
+            self.field.name,
+            option_to_string(self.field.value.as_ref())
+        )
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct InvalidRelation {
     pub code: Cow<'static, str>,
-    pub field1: OptionalField,
-    pub field2: OptionalField,
+    pub field1: Field,
+    pub field2: Field,
+}
+
+impl Display for InvalidRelation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} of {} which is {} and {} which is {}",
+            self.code,
+            self.field1.name,
+            option_to_string(self.field1.value.as_ref()),
+            self.field2.name,
+            option_to_string(self.field2.value.as_ref())
+        )
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -165,11 +256,32 @@ pub struct InvalidState {
     pub params: Vec<Field>,
 }
 
+impl Display for InvalidState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} for parameters: {}",
+            self.code,
+            array_to_string(&self.params)
+        )
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConstraintViolation {
     Field(InvalidValue),
     Relation(InvalidRelation),
     State(InvalidState),
+}
+
+impl Display for ConstraintViolation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ConstraintViolation::Field(value) => write!(f, "{}", value),
+            ConstraintViolation::Relation(value) => write!(f, "{}", value),
+            ConstraintViolation::State(value) => write!(f, "{}", value),
+        }
+    }
 }
 
 impl From<InvalidValue> for ConstraintViolation {
@@ -196,8 +308,19 @@ pub struct ValidationError {
     pub violations: Vec<ConstraintViolation>,
 }
 
+impl Display for ValidationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self.message {
+            Some(message) => write!(f, "{}: {}", message, array_to_string(&self.violations)),
+            None => write!(f, "{}", array_to_string(&self.violations)),
+        }
+    }
+}
+
+impl Error for ValidationError {}
+
 impl ValidationError {
-    fn merge(mut self, other: ValidationError) -> Self {
+    pub fn merge(mut self, other: ValidationError) -> Self {
         //TODO find a more reasonable solution for merging messages
         self.message = match (self.message, other.message) {
             (_, Some(msg2)) => Some(msg2),
@@ -296,15 +419,39 @@ impl<T> Validation<T> {
     }
 }
 
-impl<T> Validated<T> {
-    pub fn unwrap(self) -> T {
-        self.0
-    }
+pub fn invalid_value(
+    code: impl Into<Cow<'static, str>>,
+    field_name: impl Into<Cow<'static, str>>,
+    value: impl Into<Value>,
+) -> ConstraintViolation {
+    ConstraintViolation::Field(InvalidValue {
+        code: code.into(),
+        field: Field {
+            name: field_name.into(),
+            value: Some(value.into()),
+        },
+    })
 }
 
-pub trait Validate<C>: Sized {
-    fn validate(self, field_name: impl Into<Cow<'static, str>>, constraint: &C)
-        -> Validation<Self>;
+pub fn invalid_optional_value(
+    code: impl Into<Cow<'static, str>>,
+    field_name: impl Into<Cow<'static, str>>,
+    value: Option<Value>,
+) -> ConstraintViolation {
+    ConstraintViolation::Field(InvalidValue {
+        code: code.into(),
+        field: Field {
+            name: field_name.into(),
+            value,
+        },
+    })
+}
+
+pub fn fail(message: Option<Cow<'static, str>>, violation: ConstraintViolation) -> ValidationError {
+    ValidationError {
+        message,
+        violations: vec![violation],
+    }
 }
 
 #[cfg(test)]

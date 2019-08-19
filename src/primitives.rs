@@ -1,6 +1,9 @@
 use crate::{invalid_value, Validate, Validation};
 use std::borrow::Cow;
 
+pub const INVALID_LENGTH_MAX: &str = "invalid.length.max";
+pub const INVALID_LENGTH_MIN: &str = "invalid.length.min";
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Length {
     Max(usize),
@@ -8,40 +11,50 @@ pub enum Length {
     MinMax(usize, usize),
 }
 
-impl Validate<Length> for String {
-    fn validate(
-        self,
-        field_name: impl Into<Cow<'static, str>>,
-        constraint: &Length,
-    ) -> Validation<Self> {
-        let length = self.len();
-        let maybe_violation = match *constraint {
+impl Length {
+    pub fn validate(&self, length: usize) -> Option<&'static str> {
+        match *self {
             Length::Max(max) => {
-                if length <= max {
-                    Some("invalid.length.min")
+                if length > max {
+                    Some(INVALID_LENGTH_MAX)
                 } else {
                     None
                 }
             }
             Length::Min(min) => {
-                if length >= min {
-                    Some("invalid.length.min")
+                if length < min {
+                    Some(INVALID_LENGTH_MIN)
                 } else {
                     None
                 }
             }
             Length::MinMax(min, max) => {
                 if length < min {
-                    Some("invalid.length.min")
+                    Some(INVALID_LENGTH_MIN)
                 } else if length > max {
-                    Some("invalid.length.max")
+                    Some(INVALID_LENGTH_MAX)
                 } else {
                     None
                 }
             }
-        };
-        if let Some(code) = maybe_violation {
-            Validation::Failure(vec![invalid_value(code.into(), field_name.into(), self)])
+        }
+    }
+}
+
+impl Validate<Length> for String {
+    fn validate(self, name: impl Into<Cow<'static, str>>, constraint: &Length) -> Validation<Self> {
+        if let Some(code) = constraint.validate(self.len()) {
+            Validation::Failure(vec![invalid_value(code, name, self.len())])
+        } else {
+            Validation::Success(self)
+        }
+    }
+}
+
+impl<T> Validate<Length> for Vec<T> {
+    fn validate(self, name: impl Into<Cow<'static, str>>, constraint: &Length) -> Validation<Self> {
+        if let Some(code) = constraint.validate(self.len()) {
+            Validation::Failure(vec![invalid_value(code, name, self.len())])
         } else {
             Validation::Success(self)
         }
