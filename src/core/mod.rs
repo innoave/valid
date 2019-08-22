@@ -228,7 +228,7 @@ impl Display for InvalidValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} of {} which is {}, expected it to be {}",
+            "{} of {} which is {}, expected to be {}",
             self.code,
             self.field.name,
             option_to_string(self.field.actual.as_ref()),

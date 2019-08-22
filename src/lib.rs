@@ -11,7 +11,7 @@
 //!
 //! ```
 //! use valid::{Validate, Validated};
-//! use valid::primitives::Length;
+//! use valid::constraint::Length;
 //!
 //! let text = String::from("the answer is 42");
 //!
@@ -25,7 +25,7 @@
 //!
 //! ```
 //! use valid::{Validate, ValidationError, InvalidValue, Field, Value};
-//! use valid::primitives::Length;
+//! use valid::constraint::Length;
 //!
 //! let text = String::from("the answer is 42");
 //!
@@ -42,6 +42,9 @@
 //!         }
 //!     }.into()],
 //! }));
+//!
+//! // ValidationError implements the Display trait
+//! assert_eq!(result.unwrap_err().to_string(), "validating `text`: invalid.length.max of text which is 16, expected to be 15");
 //! ```
 //!
 //!
@@ -63,8 +66,9 @@
 )]
 #![allow(dead_code)] //TODO remove eventually
 
+pub mod constraint;
 mod core;
-pub mod primitives;
+mod std_lib_impls;
 
 // re-export all the core types
 pub use crate::core::*;
