@@ -41,6 +41,7 @@ pub enum Value {
     Long(i64),
     Float(f32),
     Double(f64),
+    Boolean(bool),
     #[cfg(feature = "bigdecimal")]
     Decimal(BigDecimal),
     #[cfg(feature = "chrono")]
@@ -57,6 +58,7 @@ impl Display for Value {
             Value::Long(value) => write!(f, "{}", value),
             Value::Float(value) => write!(f, "{}", value),
             Value::Double(value) => write!(f, "{}", value),
+            Value::Boolean(value) => write!(f, "{}", value),
             #[cfg(feature = "bigdecimal")]
             Value::Decimal(value) => write!(f, "{}", value),
             #[cfg(feature = "chrono")]
@@ -148,6 +150,12 @@ impl From<f32> for Value {
 impl From<f64> for Value {
     fn from(value: f64) -> Self {
         Value::Double(value)
+    }
+}
+
+impl From<bool> for Value {
+    fn from(value: bool) -> Self {
+        Value::Boolean(value)
     }
 }
 

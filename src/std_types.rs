@@ -1,6 +1,48 @@
-use crate::constraint::{HasCharCount, HasElement, HasLength};
+use crate::constraint::{HasCharCount, HasElement, HasLength, IsEmptyValue};
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
+
+impl IsEmptyValue for String {
+    fn is_empty_value(&self) -> bool {
+        self.is_empty()
+    }
+}
+
+impl IsEmptyValue for &str {
+    fn is_empty_value(&self) -> bool {
+        self.is_empty()
+    }
+}
+
+impl<T> IsEmptyValue for Vec<T> {
+    fn is_empty_value(&self) -> bool {
+        self.is_empty()
+    }
+}
+
+impl<T> IsEmptyValue for &[T] {
+    fn is_empty_value(&self) -> bool {
+        self.is_empty()
+    }
+}
+
+impl<T> IsEmptyValue for HashSet<T> {
+    fn is_empty_value(&self) -> bool {
+        self.is_empty()
+    }
+}
+
+impl<K, V> IsEmptyValue for HashMap<K, V> {
+    fn is_empty_value(&self) -> bool {
+        self.is_empty()
+    }
+}
+
+impl<T> IsEmptyValue for Option<T> {
+    fn is_empty_value(&self) -> bool {
+        self.is_none()
+    }
+}
 
 impl HasLength for String {
     fn length(&self) -> usize {

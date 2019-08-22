@@ -1,5 +1,10 @@
-use crate::{invalid_relation, invalid_value, Validate, Validation, Value};
+use crate::{invalid_optional_value, invalid_relation, invalid_value, Validate, Validation, Value};
 use std::borrow::Cow;
+
+pub const INVALID_ASSERT_TRUE: &str = "invalid.assert.true";
+pub const INVALID_ASSERT_FALSE: &str = "invalid.assert.false";
+
+pub const INVALID_NOT_EMPTY: &str = "invalid.not.empty";
 
 pub const INVALID_LENGTH_EXACT: &str = "invalid.length.exact";
 pub const INVALID_LENGTH_MAX: &str = "invalid.length.max";
@@ -19,6 +24,97 @@ pub const INVALID_MUST_MATCH: &str = "invalid.must.match";
 
 pub const INVALID_FROM_TO_INCLUSIVE: &str = "invalid.from.to.inclusive";
 pub const INVALID_FROM_TO_EXCLUSIVE: &str = "invalid.from.to.exclusive";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AssertTrue;
+
+impl AssertTrue {
+    pub fn validate(&self, value: bool) -> Option<(&'static str, ())> {
+        if value {
+            None
+        } else {
+            Some((INVALID_ASSERT_TRUE, ()))
+        }
+    }
+}
+
+impl Validate<AssertTrue> for bool {
+    fn validate(
+        self,
+        name: impl Into<Cow<'static, str>>,
+        constraint: &AssertTrue,
+    ) -> Validation<Self> {
+        if let Some((code, ())) = constraint.validate(self) {
+            Validation::Failure(vec![invalid_value(code, name, self, true)])
+        } else {
+            Validation::Success(self)
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AssertFalse;
+
+impl AssertFalse {
+    pub fn validate(&self, value: bool) -> Option<(&'static str, ())> {
+        if value {
+            Some((INVALID_ASSERT_FALSE, ()))
+        } else {
+            None
+        }
+    }
+}
+
+impl Validate<AssertFalse> for bool {
+    fn validate(
+        self,
+        name: impl Into<Cow<'static, str>>,
+        constraint: &AssertFalse,
+    ) -> Validation<Self> {
+        if let Some((code, ())) = constraint.validate(self) {
+            Validation::Failure(vec![invalid_value(code, name, self, true)])
+        } else {
+            Validation::Success(self)
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NotEmpty;
+
+impl NotEmpty {
+    pub fn validate<T>(&self, value: &T) -> Option<(&'static str, ())>
+    where
+        T: IsEmptyValue,
+    {
+        if value.is_empty_value() {
+            Some((INVALID_NOT_EMPTY, ()))
+        } else {
+            None
+        }
+    }
+}
+
+pub trait IsEmptyValue {
+    fn is_empty_value(&self) -> bool;
+}
+
+impl<T> Validate<NotEmpty> for T
+where
+    T: IsEmptyValue,
+{
+    fn validate(
+        self,
+        name: impl Into<Cow<'static, str>>,
+        constraint: &NotEmpty,
+    ) -> Validation<Self> {
+        if let Some((code, ())) = constraint.validate(&self) {
+            Validation::Failure(vec![invalid_optional_value(code, name, None, None)])
+        } else {
+            Validation::Success(self)
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Length {
@@ -201,10 +297,6 @@ where
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Contains<'a, A>(pub &'a A);
 
-pub trait HasElement<A> {
-    fn has_element(&self, element: &A) -> bool;
-}
-
 impl<'a, A> Contains<'a, A>
 where
     A: Clone,
@@ -219,6 +311,10 @@ where
             Some((INVALID_CONTAINS_ELEMENT, self.0.clone()))
         }
     }
+}
+
+pub trait HasElement<A> {
+    fn has_element(&self, element: &A) -> bool;
 }
 
 impl<'a, T, A> Validate<Contains<'a, A>> for T

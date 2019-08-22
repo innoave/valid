@@ -13,6 +13,7 @@ mod value {
                 Value::Long(_) => 3,
                 Value::Float(_) => 4,
                 Value::Double(_) => 5,
+                Value::Boolean(_) => 6,
             }
         }
         assert_eq!(exhaustive_match(Value::Integer(0)), 2);
@@ -28,7 +29,8 @@ mod value {
                 Value::Long(_) => 3,
                 Value::Float(_) => 4,
                 Value::Double(_) => 5,
-                Value::Decimal(_) => 6,
+                Value::Boolean(_) => 6,
+                Value::Decimal(_) => 7,
             }
         }
         assert_eq!(exhaustive_match(Value::Integer(0)), 2);
@@ -44,8 +46,9 @@ mod value {
                 Value::Long(_) => 3,
                 Value::Float(_) => 4,
                 Value::Double(_) => 5,
-                Value::Date(_) => 7,
-                Value::DateTime(_) => 8,
+                Value::Boolean(_) => 6,
+                Value::Date(_) => 8,
+                Value::DateTime(_) => 9,
             }
         }
         assert_eq!(exhaustive_match(Value::Integer(0)), 2);
@@ -61,9 +64,10 @@ mod value {
                 Value::Long(_) => 3,
                 Value::Float(_) => 4,
                 Value::Double(_) => 5,
-                Value::Decimal(_) => 6,
-                Value::Date(_) => 7,
-                Value::DateTime(_) => 8,
+                Value::Boolean(_) => 6,
+                Value::Decimal(_) => 7,
+                Value::Date(_) => 8,
+                Value::DateTime(_) => 9,
             }
         }
         assert_eq!(exhaustive_match(Value::Integer(0)), 2);
