@@ -72,7 +72,7 @@ impl Validate<AssertFalse> for bool {
         constraint: &AssertFalse,
     ) -> Validation<Self> {
         if let Some((code, ())) = constraint.validate(self) {
-            Validation::Failure(vec![invalid_value(code, name, self, true)])
+            Validation::Failure(vec![invalid_value(code, name, self, false)])
         } else {
             Validation::Success(self)
         }
