@@ -1,9 +1,10 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Clippy" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
     <option name="channel" value="NIGHTLY" />
-    <option name="command" value="clippy" />
+    <option name="command" value="clippy --all-features" />
     <option name="allFeatures" value="true" />
     <option name="nocapture" value="false" />
+    <option name="emulateTerminal" value="false" />
     <option name="backtrace" value="NO" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs />

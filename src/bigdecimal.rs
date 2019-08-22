@@ -27,26 +27,24 @@ impl Validate<Digits> for BigDecimal {
                     constraint.fraction,
                 )])
             }
+        } else if fraction <= constraint.fraction {
+            Validation::Failure(vec![invalid_value(
+                INVALID_DIGITS_INTEGER,
+                name,
+                num_digits,
+                constraint.integer,
+            )])
         } else {
-            if fraction <= constraint.fraction {
-                Validation::Failure(vec![invalid_value(
+            let name = name.into();
+            Validation::Failure(vec![
+                invalid_value(
                     INVALID_DIGITS_INTEGER,
-                    name,
-                    num_digits,
+                    name.clone(),
+                    integer,
                     constraint.integer,
-                )])
-            } else {
-                let name = name.into();
-                Validation::Failure(vec![
-                    invalid_value(
-                        INVALID_DIGITS_INTEGER,
-                        name.clone(),
-                        integer,
-                        constraint.integer,
-                    ),
-                    invalid_value(INVALID_DIGITS_FRACTION, name, fraction, constraint.fraction),
-                ])
-            }
+                ),
+                invalid_value(INVALID_DIGITS_FRACTION, name, fraction, constraint.fraction),
+            ])
         }
     }
 }

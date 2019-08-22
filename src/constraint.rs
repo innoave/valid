@@ -32,7 +32,7 @@ pub const INVALID_FROM_TO_EXCLUSIVE: &str = "invalid.from.to.exclusive";
 pub struct AssertTrue;
 
 impl AssertTrue {
-    pub fn validate(&self, value: bool) -> Option<(&'static str, ())> {
+    pub fn validate(self, value: bool) -> Option<(&'static str, ())> {
         if value {
             None
         } else {
@@ -59,7 +59,7 @@ impl Validate<AssertTrue> for bool {
 pub struct AssertFalse;
 
 impl AssertFalse {
-    pub fn validate(&self, value: bool) -> Option<(&'static str, ())> {
+    pub fn validate(self, value: bool) -> Option<(&'static str, ())> {
         if value {
             Some((INVALID_ASSERT_FALSE, ()))
         } else {
@@ -86,7 +86,7 @@ impl Validate<AssertFalse> for bool {
 pub struct NotEmpty;
 
 impl NotEmpty {
-    pub fn validate<T>(&self, value: &T) -> Option<(&'static str, ())>
+    pub fn validate<T>(self, value: &T) -> Option<(&'static str, ())>
     where
         T: IsEmptyValue,
     {

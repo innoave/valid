@@ -1,6 +1,6 @@
 use crate::constraint::{HasCharCount, HasElement, HasLength, IsEmptyValue};
 use std::collections::{HashMap, HashSet};
-use std::hash::Hash;
+use std::hash::{BuildHasher, Hash};
 
 impl IsEmptyValue for String {
     fn is_empty_value(&self) -> bool {
@@ -26,13 +26,13 @@ impl<T> IsEmptyValue for &[T] {
     }
 }
 
-impl<T> IsEmptyValue for HashSet<T> {
+impl<T, S> IsEmptyValue for HashSet<T, S> {
     fn is_empty_value(&self) -> bool {
         self.is_empty()
     }
 }
 
-impl<K, V> IsEmptyValue for HashMap<K, V> {
+impl<K, V, S> IsEmptyValue for HashMap<K, V, S> {
     fn is_empty_value(&self) -> bool {
         self.is_empty()
     }
@@ -104,18 +104,20 @@ impl HasElement<String> for String {
     }
 }
 
-impl<V> HasElement<V> for HashSet<V>
+impl<V, S> HasElement<V> for HashSet<V, S>
 where
     V: Eq + Hash,
+    S: BuildHasher,
 {
     fn has_element(&self, element: &V) -> bool {
         self.contains(element)
     }
 }
 
-impl<K, V> HasElement<K> for HashMap<K, V>
+impl<K, V, S> HasElement<K> for HashMap<K, V, S>
 where
     K: Eq + Hash,
+    S: BuildHasher,
 {
     fn has_element(&self, element: &K) -> bool {
         self.contains_key(element)
