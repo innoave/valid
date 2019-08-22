@@ -1,4 +1,4 @@
-use crate::{invalid_value, Validate, Validation, Value};
+use crate::{invalid_relation, invalid_value, Validate, Validation, Value};
 use std::borrow::Cow;
 
 pub const INVALID_LENGTH_EXACT: &str = "invalid.length.exact";
@@ -15,6 +15,8 @@ pub const INVALID_BOUND_OPEN_MAX: &str = "invalid.bound.open.max";
 pub const INVALID_BOUND_OPEN_MIN: &str = "invalid.bound.open.min";
 
 pub const INVALID_CONTAINS_ELEMENT: &str = "invalid.contains.element";
+
+pub const INVALID_MUST_MATCH: &str = "invalid.must.match";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Length {
@@ -136,7 +138,7 @@ where
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Bound<T> {
     Exact(T),
     ClosedRange(T, T),
@@ -147,7 +149,7 @@ pub enum Bound<T> {
 
 impl<T> Bound<T>
 where
-    T: PartialEq + PartialOrd + Clone,
+    T: Eq + Ord + Clone,
 {
     pub fn validate(&self, value: &T) -> Option<(&'static str, T)> {
         match self {
@@ -200,7 +202,7 @@ where
 
 impl<T> Validate<Bound<T>> for T
 where
-    T: PartialEq + PartialOrd + Clone,
+    T: Eq + Ord + Clone,
     Value: From<T>,
 {
     fn validate(
@@ -216,7 +218,7 @@ where
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Contains<'a, E> {
     Element(&'a E),
 }
@@ -241,6 +243,65 @@ where
                     Some((INVALID_CONTAINS_ELEMENT, element.clone()))
                 }
             }
+        }
+    }
+}
+
+impl<'a, T, A> Validate<Contains<'a, A>> for T
+where
+    T: HasElement<A>,
+    A: Clone,
+    Value: From<A> + From<T>,
+{
+    fn validate(
+        self,
+        name: impl Into<Cow<'static, str>>,
+        constraint: &Contains<'a, A>,
+    ) -> Validation<Self> {
+        if let Some((code, expected)) = constraint.validate(&self) {
+            Validation::Failure(vec![invalid_value(code, name, self, expected)])
+        } else {
+            Validation::Success(self)
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MustMatch(pub &'static str, pub &'static str);
+
+impl MustMatch {
+    pub fn validate<T>(&self, value1: &T, value2: &T) -> Option<(&'static str, ())>
+    where
+        T: Eq,
+    {
+        if value1 == value2 {
+            None
+        } else {
+            Some((INVALID_MUST_MATCH, ()))
+        }
+    }
+}
+
+impl<T> Validate<MustMatch> for (T, T)
+where
+    T: Eq,
+    Value: From<T>,
+{
+    fn validate(
+        self,
+        _name: impl Into<Cow<'static, str>>,
+        constraint: &MustMatch,
+    ) -> Validation<Self> {
+        if let Some((code, _)) = constraint.validate(&self.0, &self.1) {
+            Validation::Failure(vec![invalid_relation(
+                code,
+                constraint.0,
+                self.0,
+                constraint.1,
+                self.1,
+            )])
+        } else {
+            Validation::Success(self)
         }
     }
 }

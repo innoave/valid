@@ -459,6 +459,28 @@ pub fn invalid_optional_value(
     })
 }
 
+pub fn invalid_relation(
+    code: impl Into<Cow<'static, str>>,
+    field_name1: impl Into<Cow<'static, str>>,
+    field_value1: impl Into<Value>,
+    field_name2: impl Into<Cow<'static, str>>,
+    field_value2: impl Into<Value>,
+) -> ConstraintViolation {
+    ConstraintViolation::Relation(InvalidRelation {
+        code: code.into(),
+        field1: Field {
+            name: field_name1.into(),
+            actual: Some(field_value1.into()),
+            expected: None,
+        },
+        field2: Field {
+            name: field_name2.into(),
+            actual: Some(field_value2.into()),
+            expected: None,
+        },
+    })
+}
+
 pub fn fail(message: Option<Cow<'static, str>>, violation: ConstraintViolation) -> ValidationError {
     ValidationError {
         message,
