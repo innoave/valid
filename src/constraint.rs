@@ -18,6 +18,9 @@ pub const INVALID_CONTAINS_ELEMENT: &str = "invalid.contains.element";
 
 pub const INVALID_MUST_MATCH: &str = "invalid.must.match";
 
+pub const INVALID_FROM_TO_INCLUSIVE: &str = "invalid.from.to.inclusive";
+pub const INVALID_FROM_TO_EXCLUSIVE: &str = "invalid.from.to.exclusive";
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Length {
     Exact(usize),
@@ -300,6 +303,59 @@ where
                 constraint.1,
                 self.1,
             )])
+        } else {
+            Validation::Success(self)
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FromTo {
+    Inclusive(&'static str, &'static str),
+    Exclusive(&'static str, &'static str),
+}
+
+impl FromTo {
+    pub fn validate<T>(&self, value1: &T, value2: &T) -> Option<(&'static str, ())>
+    where
+        T: Eq + Ord,
+    {
+        match *self {
+            FromTo::Inclusive(_, _) => {
+                if value1 <= value2 {
+                    None
+                } else {
+                    Some((INVALID_FROM_TO_INCLUSIVE, ()))
+                }
+            }
+            FromTo::Exclusive(_, _) => {
+                if value1 < value2 {
+                    None
+                } else {
+                    Some((INVALID_FROM_TO_EXCLUSIVE, ()))
+                }
+            }
+        }
+    }
+}
+
+impl<T> Validate<FromTo> for (T, T)
+where
+    T: Eq + Ord,
+    Value: From<T>,
+{
+    fn validate(
+        self,
+        _name: impl Into<Cow<'static, str>>,
+        constraint: &FromTo,
+    ) -> Validation<Self> {
+        let (name1, name2) = match *constraint {
+            FromTo::Inclusive(name1, name2) => (name1, name2),
+            FromTo::Exclusive(name1, name2) => (name1, name2),
+        };
+
+        if let Some((code, _)) = constraint.validate(&self.0, &self.1) {
+            Validation::Failure(vec![invalid_relation(code, name1, self.0, name2, self.1)])
         } else {
             Validation::Success(self)
         }
