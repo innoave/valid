@@ -66,6 +66,8 @@
 )]
 #![allow(dead_code)] //TODO remove eventually
 
+#[cfg(feature = "bigdecimal")]
+mod bigdecimal;
 pub mod constraint;
 mod core;
 mod std_types;

@@ -105,12 +105,6 @@ impl From<u8> for Value {
     }
 }
 
-impl From<i64> for Value {
-    fn from(value: i64) -> Self {
-        Value::Long(value)
-    }
-}
-
 impl From<u32> for Value {
     fn from(value: u32) -> Self {
         if value > i32::max_value() as u32 {
@@ -118,6 +112,18 @@ impl From<u32> for Value {
         } else {
             Value::Integer(value as i32)
         }
+    }
+}
+
+impl From<i64> for Value {
+    fn from(value: i64) -> Self {
+        Value::Long(value)
+    }
+}
+
+impl From<u64> for Value {
+    fn from(value: u64) -> Self {
+        Value::Long(value as i64)
     }
 }
 

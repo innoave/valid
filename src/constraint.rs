@@ -18,6 +18,9 @@ pub const INVALID_BOUND_EXACT: &str = "invalid.bound.exact";
 pub const INVALID_BOUND_MAX: &str = "invalid.bound.max";
 pub const INVALID_BOUND_MIN: &str = "invalid.bound.min";
 
+pub const INVALID_DIGITS_INTEGER: &str = "invalid.digits.integer";
+pub const INVALID_DIGITS_FRACTION: &str = "invalid.digits.fraction";
+
 pub const INVALID_CONTAINS_ELEMENT: &str = "invalid.contains.element";
 
 pub const INVALID_MUST_MATCH: &str = "invalid.must.match";
@@ -292,6 +295,12 @@ where
             Validation::Success(self)
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Digits {
+    pub integer: u64,
+    pub fraction: u64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
