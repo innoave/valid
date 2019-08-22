@@ -15,8 +15,10 @@ pub const INVALID_CHAR_COUNT_MAX: &str = "invalid.char.count.max";
 pub const INVALID_CHAR_COUNT_MIN: &str = "invalid.char.count.min";
 
 pub const INVALID_BOUND_EXACT: &str = "invalid.bound.exact";
-pub const INVALID_BOUND_MAX: &str = "invalid.bound.max";
-pub const INVALID_BOUND_MIN: &str = "invalid.bound.min";
+pub const INVALID_BOUND_CLOSED_MAX: &str = "invalid.bound.closed.max";
+pub const INVALID_BOUND_CLOSED_MIN: &str = "invalid.bound.closed.min";
+pub const INVALID_BOUND_OPEN_MAX: &str = "invalid.bound.open.max";
+pub const INVALID_BOUND_OPEN_MIN: &str = "invalid.bound.open.min";
 
 pub const INVALID_DIGITS_INTEGER: &str = "invalid.digits.integer";
 pub const INVALID_DIGITS_FRACTION: &str = "invalid.digits.fraction";
@@ -212,12 +214,15 @@ where
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Bound<T> {
     Exact(T),
-    Range(T, T),
+    ClosedRange(T, T),
+    ClosedOpenRange(T, T),
+    OpenClosedRange(T, T),
+    OpenRange(T, T),
 }
 
 impl<T> Validate<Bound<T>> for T
 where
-    T: Eq + Ord + Clone,
+    T: PartialEq + PartialOrd + Clone,
     Value: From<T>,
 {
     fn validate(
@@ -233,11 +238,38 @@ where
                     None
                 }
             }
-            Bound::Range(min, max) => {
+            Bound::ClosedRange(min, max) => {
                 if self < *min {
-                    Some((INVALID_BOUND_MIN, min.clone()))
+                    Some((INVALID_BOUND_CLOSED_MIN, min.clone()))
                 } else if self > *max {
-                    Some((INVALID_BOUND_MAX, max.clone()))
+                    Some((INVALID_BOUND_CLOSED_MAX, max.clone()))
+                } else {
+                    None
+                }
+            }
+            Bound::ClosedOpenRange(min, max) => {
+                if self < *min {
+                    Some((INVALID_BOUND_CLOSED_MIN, min.clone()))
+                } else if self >= *max {
+                    Some((INVALID_BOUND_OPEN_MAX, max.clone()))
+                } else {
+                    None
+                }
+            }
+            Bound::OpenClosedRange(min, max) => {
+                if self <= *min {
+                    Some((INVALID_BOUND_OPEN_MIN, min.clone()))
+                } else if self > *max {
+                    Some((INVALID_BOUND_CLOSED_MAX, max.clone()))
+                } else {
+                    None
+                }
+            }
+            Bound::OpenRange(min, max) => {
+                if self <= *min {
+                    Some((INVALID_BOUND_OPEN_MIN, min.clone()))
+                } else if self >= *max {
+                    Some((INVALID_BOUND_OPEN_MAX, max.clone()))
                 } else {
                     None
                 }
@@ -316,11 +348,14 @@ where
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 //TODO find better name for `FromTo`
-pub struct FromTo(pub &'static str, pub &'static str);
+pub enum FromTo {
+    Inclusive(&'static str, &'static str),
+    Exclusive(&'static str, &'static str),
+}
 
 impl<T> Validate<FromTo> for (T, T)
 where
-    T: Eq + Ord,
+    T: PartialEq + PartialOrd,
     Value: From<T>,
 {
     fn validate(
@@ -328,16 +363,33 @@ where
         _name: impl Into<Cow<'static, str>>,
         constraint: &FromTo,
     ) -> Validation<Self> {
-        if self.0 <= self.1 {
-            Validation::Success(self)
-        } else {
-            Validation::Failure(vec![invalid_relation(
-                INVALID_FROM_TO_INCLUSIVE,
-                constraint.0,
-                self.0,
-                constraint.1,
-                self.1,
-            )])
+        match *constraint {
+            FromTo::Inclusive(name1, name2) => {
+                if self.0 <= self.1 {
+                    Validation::Success(self)
+                } else {
+                    Validation::Failure(vec![invalid_relation(
+                        INVALID_FROM_TO_INCLUSIVE,
+                        name1,
+                        self.0,
+                        name2,
+                        self.1,
+                    )])
+                }
+            }
+            FromTo::Exclusive(name1, name2) => {
+                if self.0 < self.1 {
+                    Validation::Success(self)
+                } else {
+                    Validation::Failure(vec![invalid_relation(
+                        INVALID_FROM_TO_EXCLUSIVE,
+                        name1,
+                        self.0,
+                        name2,
+                        self.1,
+                    )])
+                }
+            }
         }
     }
 }
