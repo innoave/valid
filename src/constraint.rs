@@ -5,14 +5,13 @@ pub const INVALID_LENGTH_EXACT: &str = "invalid.length.exact";
 pub const INVALID_LENGTH_MAX: &str = "invalid.length.max";
 pub const INVALID_LENGTH_MIN: &str = "invalid.length.min";
 
+pub const INVALID_CHAR_COUNT_EXACT: &str = "invalid.char.count.exact";
 pub const INVALID_CHAR_COUNT_MAX: &str = "invalid.char.count.max";
 pub const INVALID_CHAR_COUNT_MIN: &str = "invalid.char.count.min";
 
 pub const INVALID_BOUND_EXACT: &str = "invalid.bound.exact";
-pub const INVALID_BOUND_CLOSED_MAX: &str = "invalid.bound.closed.max";
-pub const INVALID_BOUND_CLOSED_MIN: &str = "invalid.bound.closed.min";
-pub const INVALID_BOUND_OPEN_MAX: &str = "invalid.bound.open.max";
-pub const INVALID_BOUND_OPEN_MIN: &str = "invalid.bound.open.min";
+pub const INVALID_BOUND_MAX: &str = "invalid.bound.max";
+pub const INVALID_BOUND_MIN: &str = "invalid.bound.min";
 
 pub const INVALID_CONTAINS_ELEMENT: &str = "invalid.contains.element";
 
@@ -85,6 +84,7 @@ where
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CharCount {
+    Exact(usize),
     Max(usize),
     Min(usize),
     MinMax(usize, usize),
@@ -93,6 +93,13 @@ pub enum CharCount {
 impl CharCount {
     pub fn validate(&self, char_count: usize) -> Option<(&'static str, usize)> {
         match *self {
+            CharCount::Exact(exact_val) => {
+                if char_count != exact_val {
+                    Some((INVALID_CHAR_COUNT_EXACT, exact_val))
+                } else {
+                    None
+                }
+            }
             CharCount::Max(max) => {
                 if char_count > max {
                     Some((INVALID_CHAR_COUNT_MAX, max))
@@ -144,10 +151,7 @@ where
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Bound<T> {
     Exact(T),
-    ClosedRange(T, T),
-    ClosedOpenRange(T, T),
-    OpenClosedRange(T, T),
-    OpenRange(T, T),
+    Range(T, T),
 }
 
 impl<T> Bound<T>
@@ -163,38 +167,11 @@ where
                     None
                 }
             }
-            Bound::ClosedRange(min, max) => {
+            Bound::Range(min, max) => {
                 if value < min {
-                    Some((INVALID_BOUND_CLOSED_MIN, min.clone()))
+                    Some((INVALID_BOUND_MIN, min.clone()))
                 } else if value > max {
-                    Some((INVALID_BOUND_CLOSED_MAX, max.clone()))
-                } else {
-                    None
-                }
-            }
-            Bound::ClosedOpenRange(min, max) => {
-                if value < min {
-                    Some((INVALID_BOUND_CLOSED_MIN, min.clone()))
-                } else if value >= max {
-                    Some((INVALID_BOUND_OPEN_MAX, max.clone()))
-                } else {
-                    None
-                }
-            }
-            Bound::OpenClosedRange(min, max) => {
-                if value <= min {
-                    Some((INVALID_BOUND_OPEN_MIN, min.clone()))
-                } else if value > max {
-                    Some((INVALID_BOUND_CLOSED_MAX, max.clone()))
-                } else {
-                    None
-                }
-            }
-            Bound::OpenRange(min, max) => {
-                if value <= min {
-                    Some((INVALID_BOUND_OPEN_MIN, min.clone()))
-                } else if value >= max {
-                    Some((INVALID_BOUND_OPEN_MAX, max.clone()))
+                    Some((INVALID_BOUND_MAX, max.clone()))
                 } else {
                     None
                 }
@@ -222,30 +199,24 @@ where
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Contains<'a, E> {
-    Element(&'a E),
+pub struct Contains<'a, A>(pub &'a A);
+
+pub trait HasElement<A> {
+    fn has_element(&self, element: &A) -> bool;
 }
 
-pub trait HasElement<T> {
-    fn has_element(&self, element: &T) -> bool;
-}
-
-impl<'a, E> Contains<'a, E>
+impl<'a, A> Contains<'a, A>
 where
-    E: Clone,
+    A: Clone,
 {
-    pub fn validate<T>(&self, value: &T) -> Option<(&'static str, E)>
+    pub fn validate<T>(&self, value: &T) -> Option<(&'static str, A)>
     where
-        T: HasElement<E>,
+        T: HasElement<A>,
     {
-        match *self {
-            Contains::Element(element) => {
-                if value.has_element(element) {
-                    None
-                } else {
-                    Some((INVALID_CONTAINS_ELEMENT, element.clone()))
-                }
-            }
+        if value.has_element(self.0) {
+            None
+        } else {
+            Some((INVALID_CONTAINS_ELEMENT, self.0.clone()))
         }
     }
 }
@@ -310,31 +281,18 @@ where
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum FromTo {
-    Inclusive(&'static str, &'static str),
-    Exclusive(&'static str, &'static str),
-}
+//TODO find better name for `FromTo`
+pub struct FromTo(pub &'static str, pub &'static str);
 
 impl FromTo {
     pub fn validate<T>(&self, value1: &T, value2: &T) -> Option<(&'static str, ())>
     where
         T: Eq + Ord,
     {
-        match *self {
-            FromTo::Inclusive(_, _) => {
-                if value1 <= value2 {
-                    None
-                } else {
-                    Some((INVALID_FROM_TO_INCLUSIVE, ()))
-                }
-            }
-            FromTo::Exclusive(_, _) => {
-                if value1 < value2 {
-                    None
-                } else {
-                    Some((INVALID_FROM_TO_EXCLUSIVE, ()))
-                }
-            }
+        if value1 <= value2 {
+            None
+        } else {
+            Some((INVALID_FROM_TO_INCLUSIVE, ()))
         }
     }
 }
@@ -349,13 +307,14 @@ where
         _name: impl Into<Cow<'static, str>>,
         constraint: &FromTo,
     ) -> Validation<Self> {
-        let (name1, name2) = match *constraint {
-            FromTo::Inclusive(name1, name2) => (name1, name2),
-            FromTo::Exclusive(name1, name2) => (name1, name2),
-        };
-
         if let Some((code, _)) = constraint.validate(&self.0, &self.1) {
-            Validation::Failure(vec![invalid_relation(code, name1, self.0, name2, self.1)])
+            Validation::Failure(vec![invalid_relation(
+                code,
+                constraint.0,
+                self.0,
+                constraint.1,
+                self.1,
+            )])
         } else {
             Validation::Success(self)
         }

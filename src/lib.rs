@@ -68,7 +68,7 @@
 
 pub mod constraint;
 mod core;
-mod std_lib_impls;
+mod std_types;
 
 // re-export all the core types
 pub use crate::core::*;
