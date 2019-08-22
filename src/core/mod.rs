@@ -237,6 +237,7 @@ impl Display for InvalidValue {
     }
 }
 
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct InvalidRelation {
     pub code: Cow<'static, str>,
@@ -258,6 +259,7 @@ impl Display for InvalidRelation {
     }
 }
 
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct InvalidState {
     pub code: Cow<'static, str>,
@@ -275,6 +277,7 @@ impl Display for InvalidState {
     }
 }
 
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConstraintViolation {
     Field(InvalidValue),
@@ -310,6 +313,7 @@ impl From<InvalidState> for ConstraintViolation {
     }
 }
 
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ValidationError {
     pub message: Option<Cow<'static, str>>,
