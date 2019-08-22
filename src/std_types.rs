@@ -38,9 +38,15 @@ impl<K, V> IsEmptyValue for HashMap<K, V> {
     }
 }
 
-impl<T> IsEmptyValue for Option<T> {
+impl<T> IsEmptyValue for Option<T>
+where
+    T: IsEmptyValue,
+{
     fn is_empty_value(&self) -> bool {
-        self.is_none()
+        match self {
+            Some(value) => value.is_empty_value(),
+            None => true,
+        }
     }
 }
 
