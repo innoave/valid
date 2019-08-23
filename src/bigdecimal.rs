@@ -1,10 +1,9 @@
 use crate::constraint::{Digits, INVALID_DIGITS_FRACTION, INVALID_DIGITS_INTEGER};
-use crate::{invalid_value, Validate, Validation};
+use crate::{invalid_value, FieldName, Validate, Validation};
 use bigdecimal::BigDecimal;
-use std::borrow::Cow;
 
-impl Validate<Digits> for BigDecimal {
-    fn validate(self, name: impl Into<Cow<'static, str>>, constraint: &Digits) -> Validation<Self> {
+impl Validate<Digits, FieldName> for BigDecimal {
+    fn validate(self, name: impl Into<FieldName>, constraint: &Digits) -> Validation<Self> {
         let (_, exponent) = self.as_bigint_and_exponent();
         let num_digits = self.digits();
         let (integer, fraction) = if exponent > 0 {

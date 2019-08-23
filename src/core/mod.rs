@@ -29,8 +29,102 @@ impl<T> Deref for Validated<T> {
     }
 }
 
-pub trait Validate<C>: Sized {
-    fn validate(self, name: impl Into<Cow<'static, str>>, constraint: &C) -> Validation<Self>;
+pub trait Validate<C, S>
+where
+    S: Context,
+    Self: Sized,
+{
+    fn validate(self, context: impl Into<S>, constraint: &C) -> Validation<Self>;
+}
+
+mod private {
+    pub trait Sealed {}
+
+    impl<T> Sealed for T where T: super::Context {}
+}
+
+pub trait Context: private::Sealed {}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FieldName(pub Cow<'static, str>);
+
+impl Context for FieldName {}
+
+impl<A> From<A> for FieldName
+where
+    A: Into<Cow<'static, str>>,
+{
+    fn from(value: A) -> Self {
+        FieldName(value.into())
+    }
+}
+
+impl Deref for FieldName {
+    type Target = Cow<'static, str>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl FieldName {
+    pub fn unwrap(self) -> Cow<'static, str> {
+        self.0
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RelatedFields(pub Cow<'static, str>, pub Cow<'static, str>);
+
+impl Context for RelatedFields {}
+
+impl<A, B> From<(A, B)> for RelatedFields
+where
+    A: Into<Cow<'static, str>>,
+    B: Into<Cow<'static, str>>,
+{
+    fn from((value1, value2): (A, B)) -> Self {
+        RelatedFields(value1.into(), value2.into())
+    }
+}
+
+impl RelatedFields {
+    pub fn unwrap(self) -> (Cow<'static, str>, Cow<'static, str>) {
+        (self.0, self.1)
+    }
+
+    pub fn first(&self) -> &str {
+        &self.0
+    }
+
+    pub fn second(&self) -> &str {
+        &self.1
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct State<S>(pub S);
+
+impl<S> Context for State<S> {}
+
+impl<S> From<S> for State<S> {
+    fn from(value: S) -> Self {
+        State(value)
+    }
+}
+
+impl<S> Deref for State<S> {
+    type Target = S;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<S> State<S> {
+    pub fn unwrap(self) -> S {
+        self.0
+    }
 }
 
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
@@ -390,16 +484,12 @@ impl<T> Validation<T> {
         }
     }
 
-    pub fn and<C, U>(
-        self,
-        field_name: impl Into<Cow<'static, str>>,
-        constraint: &C,
-        entity: U,
-    ) -> Validation<()>
+    pub fn and<C, S, U>(self, context: impl Into<S>, constraint: &C, entity: U) -> Validation<()>
     where
-        U: Validate<C>,
+        S: Context,
+        U: Validate<C, S>,
     {
-        let other = entity.validate(field_name, constraint);
+        let other = entity.validate(context, constraint);
         match (self, other) {
             (Validation::Success(_), Validation::Success(_)) => Validation::Success(()),
             (Validation::Failure(violations), Validation::Success(_)) => {
@@ -415,17 +505,18 @@ impl<T> Validation<T> {
         }
     }
 
-    pub fn and_then<C, U>(
+    pub fn and_then<C, S, U>(
         self,
-        field_name: impl Into<Cow<'static, str>>,
+        context: impl Into<S>,
         constraint: &C,
         entity: U,
     ) -> Validation<U>
     where
-        U: Validate<C>,
+        S: Context,
+        U: Validate<C, S>,
     {
         match self {
-            Validation::Success(_) => entity.validate(field_name, constraint),
+            Validation::Success(_) => entity.validate(context, constraint),
             Validation::Failure(error) => Validation::Failure(error),
         }
     }
@@ -447,14 +538,14 @@ impl<T> Validation<T> {
 
 pub fn invalid_value(
     code: impl Into<Cow<'static, str>>,
-    field_name: impl Into<Cow<'static, str>>,
+    field_name: impl Into<FieldName>,
     actual_value: impl Into<Value>,
     expected_value: impl Into<Value>,
 ) -> ConstraintViolation {
     ConstraintViolation::Field(InvalidValue {
         code: code.into(),
         field: Field {
-            name: field_name.into(),
+            name: field_name.into().unwrap(),
             actual: Some(actual_value.into()),
             expected: Some(expected_value.into()),
         },
@@ -463,14 +554,14 @@ pub fn invalid_value(
 
 pub fn invalid_optional_value(
     code: impl Into<Cow<'static, str>>,
-    field_name: impl Into<Cow<'static, str>>,
+    field_name: impl Into<FieldName>,
     actual: Option<Value>,
     expected: Option<Value>,
 ) -> ConstraintViolation {
     ConstraintViolation::Field(InvalidValue {
         code: code.into(),
         field: Field {
-            name: field_name.into(),
+            name: field_name.into().unwrap(),
             actual,
             expected,
         },

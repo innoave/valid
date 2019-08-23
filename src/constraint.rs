@@ -1,5 +1,7 @@
-use crate::{invalid_optional_value, invalid_relation, invalid_value, Validate, Validation, Value};
-use std::borrow::Cow;
+use crate::{
+    invalid_optional_value, invalid_relation, invalid_value, FieldName, RelatedFields, Validate,
+    Validation, Value,
+};
 
 pub const INVALID_ASSERT_TRUE: &str = "invalid.assert.true";
 pub const INVALID_ASSERT_FALSE: &str = "invalid.assert.false";
@@ -33,12 +35,8 @@ pub const INVALID_FROM_TO_EXCLUSIVE: &str = "invalid.from.to.exclusive";
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AssertTrue;
 
-impl Validate<AssertTrue> for bool {
-    fn validate(
-        self,
-        name: impl Into<Cow<'static, str>>,
-        _constraint: &AssertTrue,
-    ) -> Validation<Self> {
+impl Validate<AssertTrue, FieldName> for bool {
+    fn validate(self, name: impl Into<FieldName>, _constraint: &AssertTrue) -> Validation<Self> {
         if self {
             Validation::Success(self)
         } else {
@@ -50,12 +48,8 @@ impl Validate<AssertTrue> for bool {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AssertFalse;
 
-impl Validate<AssertFalse> for bool {
-    fn validate(
-        self,
-        name: impl Into<Cow<'static, str>>,
-        _constraint: &AssertFalse,
-    ) -> Validation<Self> {
+impl Validate<AssertFalse, FieldName> for bool {
+    fn validate(self, name: impl Into<FieldName>, _constraint: &AssertFalse) -> Validation<Self> {
         if self {
             Validation::Failure(vec![invalid_value(INVALID_ASSERT_FALSE, name, self, false)])
         } else {
@@ -71,15 +65,11 @@ pub trait IsEmptyValue {
     fn is_empty_value(&self) -> bool;
 }
 
-impl<T> Validate<NotEmpty> for T
+impl<T> Validate<NotEmpty, FieldName> for T
 where
     T: IsEmptyValue,
 {
-    fn validate(
-        self,
-        name: impl Into<Cow<'static, str>>,
-        _constraint: &NotEmpty,
-    ) -> Validation<Self> {
+    fn validate(self, name: impl Into<FieldName>, _constraint: &NotEmpty) -> Validation<Self> {
         if self.is_empty_value() {
             Validation::Failure(vec![invalid_optional_value(
                 INVALID_NOT_EMPTY,
@@ -105,11 +95,11 @@ pub trait HasLength {
     fn length(&self) -> usize;
 }
 
-impl<T> Validate<Length> for T
+impl<T> Validate<Length, FieldName> for T
 where
     T: HasLength,
 {
-    fn validate(self, name: impl Into<Cow<'static, str>>, constraint: &Length) -> Validation<Self> {
+    fn validate(self, name: impl Into<FieldName>, constraint: &Length) -> Validation<Self> {
         let length = self.length();
         if let Some((code, expected)) = match *constraint {
             Length::Exact(exact_len) => {
@@ -162,15 +152,11 @@ pub trait HasCharCount {
     fn char_count(&self) -> usize;
 }
 
-impl<T> Validate<CharCount> for T
+impl<T> Validate<CharCount, FieldName> for T
 where
     T: HasCharCount,
 {
-    fn validate(
-        self,
-        name: impl Into<Cow<'static, str>>,
-        constraint: &CharCount,
-    ) -> Validation<Self> {
+    fn validate(self, name: impl Into<FieldName>, constraint: &CharCount) -> Validation<Self> {
         let char_count = self.char_count();
         if let Some((code, expected)) = match *constraint {
             CharCount::Exact(exact_val) => {
@@ -220,16 +206,12 @@ pub enum Bound<T> {
     OpenRange(T, T),
 }
 
-impl<T> Validate<Bound<T>> for T
+impl<T> Validate<Bound<T>, FieldName> for T
 where
     T: PartialEq + PartialOrd + Clone,
     Value: From<T>,
 {
-    fn validate(
-        self,
-        name: impl Into<Cow<'static, str>>,
-        constraint: &Bound<T>,
-    ) -> Validation<Self> {
+    fn validate(self, name: impl Into<FieldName>, constraint: &Bound<T>) -> Validation<Self> {
         if let Some((code, expected)) = match constraint {
             Bound::Exact(bound) => {
                 if *bound != self {
@@ -295,7 +277,7 @@ pub trait HasElement<A> {
     fn has_element(&self, element: &A) -> bool;
 }
 
-impl<'a, T, A> Validate<Contains<'a, A>> for T
+impl<'a, T, A> Validate<Contains<'a, A>, FieldName> for T
 where
     T: HasElement<A>,
     A: Clone,
@@ -303,7 +285,7 @@ where
 {
     fn validate(
         self,
-        name: impl Into<Cow<'static, str>>,
+        name: impl Into<FieldName>,
         constraint: &Contains<'a, A>,
     ) -> Validation<Self> {
         if self.has_element(&constraint.0) {
@@ -320,26 +302,27 @@ where
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct MustMatch(pub &'static str, pub &'static str);
+pub struct MustMatch;
 
-impl<T> Validate<MustMatch> for (T, T)
+impl<T> Validate<MustMatch, RelatedFields> for (T, T)
 where
     T: Eq,
     Value: From<T>,
 {
     fn validate(
         self,
-        _name: impl Into<Cow<'static, str>>,
-        constraint: &MustMatch,
+        fields: impl Into<RelatedFields>,
+        _constraint: &MustMatch,
     ) -> Validation<Self> {
+        let RelatedFields(name1, name2) = fields.into();
         if self.0 == self.1 {
             Validation::Success(self)
         } else {
             Validation::Failure(vec![invalid_relation(
                 INVALID_MUST_MATCH,
-                constraint.0,
+                name1,
                 self.0,
-                constraint.1,
+                name2,
                 self.1,
             )])
         }
@@ -349,22 +332,19 @@ where
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 //TODO find better name for `FromTo`
 pub enum FromTo {
-    Inclusive(&'static str, &'static str),
-    Exclusive(&'static str, &'static str),
+    Inclusive,
+    Exclusive,
 }
 
-impl<T> Validate<FromTo> for (T, T)
+impl<T> Validate<FromTo, RelatedFields> for (T, T)
 where
     T: PartialEq + PartialOrd,
     Value: From<T>,
 {
-    fn validate(
-        self,
-        _name: impl Into<Cow<'static, str>>,
-        constraint: &FromTo,
-    ) -> Validation<Self> {
+    fn validate(self, fields: impl Into<RelatedFields>, constraint: &FromTo) -> Validation<Self> {
+        let RelatedFields(name1, name2) = fields.into();
         match *constraint {
-            FromTo::Inclusive(name1, name2) => {
+            FromTo::Inclusive => {
                 if self.0 <= self.1 {
                     Validation::Success(self)
                 } else {
@@ -377,7 +357,7 @@ where
                     )])
                 }
             }
-            FromTo::Exclusive(name1, name2) => {
+            FromTo::Exclusive => {
                 if self.0 < self.1 {
                     Validation::Success(self)
                 } else {
