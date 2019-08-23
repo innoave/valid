@@ -529,10 +529,7 @@ impl<T> Validation<T> {
     }
 
     pub fn is_failure(&self) -> bool {
-        match self {
-            Validation::Success(_) => false,
-            Validation::Failure(_) => true,
-        }
+        !self.is_success()
     }
 }
 

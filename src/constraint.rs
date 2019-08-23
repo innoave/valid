@@ -270,6 +270,51 @@ pub struct Digits {
     pub fraction: u64,
 }
 
+pub trait Decimal {
+    fn integer_digits(&self) -> u64;
+    fn fraction_digits(&self) -> u64;
+}
+
+impl<T> Validate<Digits, FieldName> for T
+where
+    T: Decimal,
+{
+    fn validate(self, name: impl Into<FieldName>, constraint: &Digits) -> Validation<Self> {
+        let integer = self.integer_digits();
+        let fraction = self.fraction_digits();
+        if integer <= constraint.integer {
+            if fraction <= constraint.fraction {
+                Validation::Success(self)
+            } else {
+                Validation::Failure(vec![invalid_value(
+                    INVALID_DIGITS_FRACTION,
+                    name,
+                    fraction,
+                    constraint.fraction,
+                )])
+            }
+        } else if fraction <= constraint.fraction {
+            Validation::Failure(vec![invalid_value(
+                INVALID_DIGITS_INTEGER,
+                name,
+                integer,
+                constraint.integer,
+            )])
+        } else {
+            let name = name.into();
+            Validation::Failure(vec![
+                invalid_value(
+                    INVALID_DIGITS_INTEGER,
+                    name.clone(),
+                    integer,
+                    constraint.integer,
+                ),
+                invalid_value(INVALID_DIGITS_FRACTION, name, fraction, constraint.fraction),
+            ])
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Contains<'a, A>(pub &'a A);
 
