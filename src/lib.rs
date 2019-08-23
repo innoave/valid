@@ -64,7 +64,6 @@
     unused_import_braces,
     unused_qualifications
 )]
-#![allow(dead_code)] //TODO remove eventually
 
 #[cfg(feature = "bigdecimal")]
 mod bigdecimal;
