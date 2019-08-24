@@ -9,16 +9,17 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::error::Error;
 use std::fmt;
-use std::fmt::{Display, Write};
+use std::fmt::{Debug, Display, Write};
 use std::iter::FromIterator;
 use std::marker::PhantomData;
 use std::ops::Deref;
 
-/// A wrapper type to express that the value of type `T` has been validated
+/// A wrapper type to express that the value of type `T` has been validated by
+/// the constraint `C`
 ///
 /// The idea is that an instance of `Validated<C, T>` can only be obtained by
 /// validating a value of type `T` using the constraint `C`. There is no way to
-/// construct an instance of `Validated` directly.
+/// construct an instance of `Validated` directly.[^1]
 ///
 /// It follows the new type pattern and can be de-referenced to a immutable
 /// reference to its inner value or unwrapped to get the owned inner value.
@@ -102,6 +103,12 @@ use std::ops::Deref;
 /// Due to the type `EmailAddress` is defined in another module it can only be
 /// constructed from a `Validated<Email, String>`.
 ///
+/// [^1]: Actually there is a way to construct an instance of `Validated`
+///       without actually doing any validation: we can use the
+///       `Validation::success` (see unit tests on how it can be done)
+///       We need this method for custom implementations of the `Validate`
+///       trait. Unfortunately I have no idea how to prevent this.
+///       Fortunately such code can be found by (automated) code review.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Validated<C, T>(PhantomData<C>, T);
 
@@ -214,6 +221,107 @@ impl<S> Deref for State<S> {
 impl<S> State<S> {
     pub fn unwrap(self) -> S {
         self.0
+    }
+}
+
+enum InnerValidation<C, T> {
+    Success(PhantomData<C>, T),
+    Failure(Vec<ConstraintViolation>),
+}
+
+pub struct Validation<C, T>(InnerValidation<C, T>);
+
+impl<C, T> Debug for Validation<C, T>
+where
+    C: Debug,
+    T: Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self.0 {
+            InnerValidation::Success(constraint, value) => {
+                write!(f, "Validation(Success({:?}, {:?}))", constraint, value)
+            }
+            InnerValidation::Failure(violations) => {
+                write!(f, "Validation(Failure({:?}))", violations)
+            }
+        }
+    }
+}
+
+impl<C, T> Validation<C, T> {
+    pub fn success<S>(valid: T) -> Self
+    where
+        S: Context,
+        T: Validate<C, S>,
+    {
+        Validation(InnerValidation::Success(PhantomData, valid))
+    }
+
+    pub fn failure(constraint_violations: impl IntoIterator<Item = ConstraintViolation>) -> Self {
+        Validation(InnerValidation::Failure(Vec::from_iter(
+            constraint_violations.into_iter(),
+        )))
+    }
+
+    pub fn result<M>(self, message: Option<M>) -> Result<Validated<C, T>, ValidationError>
+    where
+        M: Into<Cow<'static, str>>,
+    {
+        match self.0 {
+            InnerValidation::Success(_c, entity) => Ok(Validated(_c, entity)),
+            InnerValidation::Failure(violations) => Err(ValidationError {
+                message: message.map(Into::into),
+                violations,
+            }),
+        }
+    }
+
+    pub fn and<D, S, U>(self, context: impl Into<S>, constraint: &D, entity: U) -> Validation<D, ()>
+    where
+        S: Context,
+        U: Validate<D, S>,
+    {
+        let other = entity.validate(context, constraint);
+        match (self.0, other.0) {
+            (InnerValidation::Success(_, _), InnerValidation::Success(_, _)) => {
+                Validation::success::<S>(())
+            }
+            (InnerValidation::Failure(violations), InnerValidation::Success(_, _)) => {
+                Validation::failure(violations)
+            }
+            (InnerValidation::Success(_, _), InnerValidation::Failure(violations)) => {
+                Validation::failure(violations)
+            }
+            (InnerValidation::Failure(mut violations), InnerValidation::Failure(violations2)) => {
+                violations.extend(violations2);
+                Validation::failure(violations)
+            }
+        }
+    }
+
+    pub fn and_then<D, S, U>(
+        self,
+        context: impl Into<S>,
+        constraint: &D,
+        entity: U,
+    ) -> Validation<D, U>
+    where
+        S: Context,
+        U: Validate<D, S>,
+    {
+        match self.0 {
+            InnerValidation::Success(_, _) => entity.validate(context, constraint),
+            InnerValidation::Failure(error) => Validation::failure(error),
+        }
+    }
+}
+
+impl<C, S> Validate<C, S> for ()
+where
+    S: Context,
+{
+    fn validate(self, _context: impl Into<S>, _constraint: &C) -> Validation<C, Self> {
+        Validation::success::<S>(())
     }
 }
 
@@ -539,72 +647,6 @@ impl ValidationError {
         };
         self.violations.extend(other.violations);
         self
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Validation<C, T> {
-    Success(PhantomData<C>, T),
-    Failure(Vec<ConstraintViolation>),
-}
-
-impl<C, T> Validation<C, T> {
-    pub fn success(valid: T) -> Self {
-        Validation::Success(PhantomData, valid)
-    }
-
-    pub fn failure(constraint_violations: impl IntoIterator<Item = ConstraintViolation>) -> Self {
-        Validation::Failure(Vec::from_iter(constraint_violations.into_iter()))
-    }
-
-    pub fn result(
-        self,
-        message: impl Into<Option<Cow<'static, str>>>,
-    ) -> Result<Validated<C, T>, ValidationError> {
-        match self {
-            Validation::Success(_c, entity) => Ok(Validated(_c, entity)),
-            Validation::Failure(violations) => Err(ValidationError {
-                message: message.into(),
-                violations,
-            }),
-        }
-    }
-
-    pub fn and<D, S, U>(self, context: impl Into<S>, constraint: &D, entity: U) -> Validation<D, ()>
-    where
-        S: Context,
-        U: Validate<D, S>,
-    {
-        let other = entity.validate(context, constraint);
-        match (self, other) {
-            (Validation::Success(_, _), Validation::Success(_, _)) => Validation::success(()),
-            (Validation::Failure(violations), Validation::Success(_, _)) => {
-                Validation::failure(violations)
-            }
-            (Validation::Success(_, _), Validation::Failure(violations)) => {
-                Validation::failure(violations)
-            }
-            (Validation::Failure(mut violations), Validation::Failure(violations2)) => {
-                violations.extend(violations2);
-                Validation::failure(violations)
-            }
-        }
-    }
-
-    pub fn and_then<D, S, U>(
-        self,
-        context: impl Into<S>,
-        constraint: &D,
-        entity: U,
-    ) -> Validation<D, U>
-    where
-        S: Context,
-        U: Validate<D, S>,
-    {
-        match self {
-            Validation::Success(_, _) => entity.validate(context, constraint),
-            Validation::Failure(error) => Validation::failure(error),
-        }
     }
 }
 

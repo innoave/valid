@@ -5,7 +5,7 @@
 //! validation function again can be used to build validations for even more
 //! complex types.
 //!
-//! ## Validation function, constraints and context
+//! # Validation function, constraints and context
 //!
 //! The goal of the validation is to confirm that a given value of type `T` is
 //! compliant to a set of one or several constraints. To find out whether a
@@ -17,7 +17,7 @@
 //! fn validate<T, S, C>(value: T, context: S, constraint: C) -> Result<Validated<C, T>, ValidationError>;
 //! ```
 //!
-//! This function takes a value `T`, a context S, and a constraint definition
+//! This function takes a value `T`, a context `S`, and a constraint definition
 //! `C` as input and returns a result that is either a `Validated<C, T>` or a
 //! `ValidationError`. So we might define the validation function as a function
 //! that converts a type `T` into some `Validated<C, T>` or returns an error if
@@ -36,7 +36,7 @@
 //! that an identifier must be unique within an application.
 //!
 //! This crate provides some constraints. Those built in constraints are found
-//! in the [`constraint`](mod.constraint.html) module.
+//! in the [`constraint`](constraint/index.html) module.
 //!
 //! In this library constraints are assigned to one of 3 categories:
 //!
@@ -67,7 +67,7 @@
 //!
 //! For the second aspect the [`ValidationError`](struct.ValidationError.html)
 //! struct as defined by this crate contains a list of
-//! [`ConstraintViolation`](enum.ConstraintViolation.thml)s. A constraint
+//! [`ConstraintViolation`](enum.ConstraintViolation.html)s. A constraint
 //! violation is an enum with 3 variants, one for each of the 3 categories we
 //! talked about:
 //!
@@ -76,26 +76,26 @@
 //! * `ConstraintViolation::State(InvalidState)`
 //!
 //!
-//! ## Generic implementation of constraints and properties
+//! # Generic implementation of constraints and properties
 //!
 //! The validation function of the [`Validate`](trait.Validate.html) trait is
 //! applied to the combination of a constraint and a value. To validate some
-//! constraint `C` for a value of type `T` the `Validate` trait must be
-//! implemented for the combination of these two types.
+//! constraint `C` for a value of type `T` the [`Validate`](trait.Validate.html)
+//! trait must be implemented for the combination of these two types.
 //!
 //! Most primitive constraints evaluate one property of a value, such as the
 //! length of a string or the number of fraction digits of a decimal number.
 //! If we use traits to determine the relevant property of a value (lets call
-//! them property traits) we can implement the `Validate` trait for all types
-//! `T` that implement the according property trait.
+//! them property traits) we can implement the [`Validate`](trait.Validate.html)
+//! trait for all types `T` that implement the according property trait.
 //!
-//! This crate implements the `Validate` trait for all provided constraints
-//! for all generic types `T` that implement a certain property trait. If there
-//! is a trait suitable as a property trait defined by the std-lib we use that
-//! otherwise we define our own trait.
+//! This crate implements the [`Validate`](trait.Validate.html) trait for all
+//! provided constraints for all generic types `T` that implement a certain
+//! property trait. If there is a trait suitable as a property trait defined by
+//! the std-lib we use that otherwise we define our own trait.
 //!
 //! The property traits defined by this crate are found in the
-//! [`property`](mod.property.html) module.
+//! [`property`](property/index.html) module.
 //!
 //!
 //! ## Examples
@@ -108,7 +108,7 @@
 //!
 //! let text = String::from("the answer is 42");
 //!
-//! let result = text.validate("text", &Length::MinMax(2, 16)).result(Some("validating `text`".into()));
+//! let result = text.validate("text", &Length::MinMax(2, 16)).result(Some("validating `text`"));
 //!
 //! assert_eq!(result.unwrap().unwrap(), String::from("the answer is 42"));
 //! ```
@@ -122,7 +122,7 @@
 //!
 //! let text = String::from("the answer is 42");
 //!
-//! let result = text.validate("text", &Length::MinMax(2, 15)).result(Some("validating `text`".into()));
+//! let result = text.validate("text", &Length::MinMax(2, 15)).result(Some("validating `text`"));
 //!
 //! assert_eq!(result, Err(ValidationError {
 //!     message: Some("validating `text`".into()),

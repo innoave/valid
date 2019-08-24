@@ -76,29 +76,23 @@ mod value {
 
 mod validation {
     use super::*;
+    use crate::constraint::{Bound, NotEmpty};
 
     #[test]
-    fn validation_of_type_that_does_not_implement_partial_eq() {
-        struct TypeWithoutPartialEqImpl(i32);
+    fn unfortunately_we_can_construct_an_instance_of_validated_without_doing_any_validation() {
+        //TODO find a way to prevent this from compiling and still support the
+        //     the possibility for custom implementations of the `Validate` trait
 
-        let value = Validation::Success::<(), _>(PhantomData, TypeWithoutPartialEqImpl(42));
+        let value: Validated<Bound<i32>, i32> = Validation::success(42)
+            .result(Some("its not really validated"))
+            .unwrap();
 
-        match value {
-            Validation::Success(_, val) => assert_eq!(val.0, 42),
-            Validation::Failure(_) => {}
-        }
-    }
+        assert_eq!(value.unwrap(), 42);
 
-    #[test]
-    fn validation_of_type_that_implements_partial_eq() {
-        #[derive(Debug, PartialEq)]
-        struct TypeWithPartialEqImpl(i32);
+        let value: Validated<NotEmpty, String> = Validation::success("invalid".to_string())
+            .result(Some("its not really validated"))
+            .unwrap();
 
-        let value = Validation::Success::<(), _>(PhantomData, TypeWithPartialEqImpl(42));
-
-        assert_eq!(
-            value,
-            Validation::Success(PhantomData, TypeWithPartialEqImpl(42))
-        );
+        assert_eq!(value.unwrap(), "invalid");
     }
 }
