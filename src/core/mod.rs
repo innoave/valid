@@ -15,7 +15,7 @@ use std::marker::PhantomData;
 use std::ops::Deref;
 
 /// A wrapper type to express that the value of type `T` has been validated by
-/// the constraint `C`
+/// the constraint `C`.
 ///
 /// The idea is that an instance of `Validated<C, T>` can only be obtained by
 /// validating a value of type `T` using the constraint `C`. There is no way to
@@ -126,6 +126,140 @@ impl<C, T> Deref for Validated<C, T> {
     }
 }
 
+/// The validation function validates whether the given value complies to the
+/// specified constraint.
+///
+/// It returns a `Validation` value that may be used to perform further
+/// validations using its combinator methods `and` or `and_then` or get the
+/// final result by calling the `result` method.
+///
+/// The context provides additional information to perform the validation,
+/// for example a lookup table or some state information. It may also hold
+/// parameters needed to provide additional parameters to the error in case
+/// of a constraint violation. (see the crate level documentation for more
+/// details on how to use the context)
+///
+/// To implement a custom constraint we first define a struct that represents
+/// the constraint. The constraint usually holds parameters of the constraint
+/// such as allowed limits. Then we implement the `Validate` for the combination
+/// of our new constraint and any type that should be validated for this
+/// constraint.
+///
+/// # Examples
+///
+/// Lets say we have an enum that represents the days of a week.
+///
+/// ```rust
+/// #[derive(Debug, PartialEq)]
+/// enum Weekday {
+///     Monday,
+///     Tuesday,
+///     Wednesday,
+///     Thursday,
+///     Friday,
+///     Saturday,
+///     Sunday,
+/// }
+/// ```
+///
+/// For some usage in our application only workdays are allowed. But it depends
+/// on some configuration parameter whether saturday is considered a workday or
+/// not. So we define the enum `Workday` with two variants to represent our
+/// constraint.
+///
+/// ```rust
+/// enum Workday {
+///     InclSaturday,
+///     ExclSaturday,
+/// }
+/// ```
+///
+/// To be able to validate whether of value of type `Weekday` is compliant to
+/// our `Workday` constraint we implement the `Validate` trait for the
+/// `Weekday` trait.
+///
+/// ```rust
+/// # #[derive(Debug, PartialEq)]
+/// # enum Weekday {
+/// #     Monday,
+/// #     Tuesday,
+/// #     Wednesday,
+/// #     Thursday,
+/// #     Friday,
+/// #     Saturday,
+/// #     Sunday,
+/// # }
+/// # enum Workday {
+/// #     InclSaturday,
+/// #     ExclSaturday,
+/// # }
+/// use valid::{Validate, FieldName, Validation, invalid_value};
+///
+/// impl Validate<Workday, FieldName> for Weekday {
+///     fn validate(self, name: impl Into<FieldName>, constraint: &Workday) -> Validation<Workday, Self> {
+///         match (&self, constraint) {
+///             (Weekday::Sunday, _) => Validation::failure(vec![
+///                 invalid_value("invalid.workday.incl.saturday", name, "sunday".to_string(), "monday - friday".to_string())
+///             ]),
+///             (Weekday::Saturday, Workday::ExclSaturday) => Validation::failure(vec![
+///                 invalid_value("invalid.workday.excl.saturday", name, "saturday".to_string(), "monday - friday".to_string())
+///             ]),
+///             (_, _) => Validation::success(self),
+///         }
+///     }
+/// }
+/// ```
+///
+/// Now we can validate some values for being workdays.
+///
+/// ```rust
+/// # #[derive(Debug, PartialEq)]
+/// # enum Weekday {
+/// #     Monday,
+/// #     Tuesday,
+/// #     Wednesday,
+/// #     Thursday,
+/// #     Friday,
+/// #     Saturday,
+/// #     Sunday,
+/// # }
+/// # enum Workday {
+/// #     InclSaturday,
+/// #     ExclSaturday,
+/// # }
+/// # use valid::{Validate, FieldName, Validation, invalid_value};
+/// #
+/// # impl Validate<Workday, FieldName> for Weekday {
+/// #     fn validate(self, name: impl Into<FieldName>, constraint: &Workday) -> Validation<Workday, Self> {
+/// #         match (&self, constraint) {
+/// #             (Weekday::Sunday, _) => Validation::failure(vec![
+/// #                 invalid_value("invalid.workday.incl.saturday", name, "sunday".to_string(), "monday - friday".to_string())
+/// #             ]),
+/// #             (Weekday::Saturday, Workday::ExclSaturday) => Validation::failure(vec![
+/// #                 invalid_value("invalid.workday.excl.saturday", name, "saturday".to_string(), "monday - friday".to_string())
+/// #             ]),
+/// #             (_, _) => Validation::success(self),
+/// #         }
+/// #     }
+/// # }
+/// let validated = Weekday::Monday.validate("day of release", &Workday::ExclSaturday)
+///     .result(None)
+///     .expect("a valid workday");
+///
+/// assert_eq!(validated.unwrap(), Weekday::Monday);
+///
+/// let result = Weekday::Saturday.validate("day of release", &Workday::ExclSaturday).result(None);
+///
+/// assert!(result.is_err());
+///
+/// let result = Weekday::Sunday.validate("day of release", &Workday::InclSaturday).result(None);
+///
+/// assert!(result.is_err());
+/// ```
+///
+/// see the documentation of the
+/// [`ValidationError`](struct.ValidationError.html) for details on how to deal
+/// with validation errors.
 pub trait Validate<C, S>
 where
     S: Context,
@@ -263,10 +397,10 @@ impl<C, T> Validation<C, T> {
         )))
     }
 
-    pub fn result<M>(self, message: Option<M>) -> Result<Validated<C, T>, ValidationError>
-    where
-        M: Into<Cow<'static, str>>,
-    {
+    pub fn result(
+        self,
+        message: Option<Cow<'static, str>>,
+    ) -> Result<Validated<C, T>, ValidationError> {
         match self.0 {
             InnerValidation::Success(_c, entity) => Ok(Validated(_c, entity)),
             InnerValidation::Failure(violations) => Err(ValidationError {

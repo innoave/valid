@@ -84,13 +84,13 @@ mod validation {
         //     the possibility for custom implementations of the `Validate` trait
 
         let value: Validated<Bound<i32>, i32> = Validation::success(42)
-            .result(Some("its not really validated"))
+            .result(Some("its not really validated".into()))
             .unwrap();
 
         assert_eq!(value.unwrap(), 42);
 
         let value: Validated<NotEmpty, String> = Validation::success("invalid".to_string())
-            .result(Some("its not really validated"))
+            .result(Some("its not really validated".into()))
             .unwrap();
 
         assert_eq!(value.unwrap(), "invalid");

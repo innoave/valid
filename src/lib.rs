@@ -108,7 +108,7 @@
 //!
 //! let text = String::from("the answer is 42");
 //!
-//! let result = text.validate("text", &Length::MinMax(2, 16)).result(Some("validating `text`"));
+//! let result = text.validate("text", &Length::MinMax(2, 16)).result(Some("validating `text`".into()));
 //!
 //! assert_eq!(result.unwrap().unwrap(), String::from("the answer is 42"));
 //! ```
@@ -122,7 +122,7 @@
 //!
 //! let text = String::from("the answer is 42");
 //!
-//! let result = text.validate("text", &Length::MinMax(2, 15)).result(Some("validating `text`"));
+//! let result = text.validate("text", &Length::MinMax(2, 15)).result(Some("validating `text`".into()));
 //!
 //! assert_eq!(result, Err(ValidationError {
 //!     message: Some("validating `text`".into()),
