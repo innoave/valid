@@ -265,6 +265,8 @@ where
     S: Context,
     Self: Sized,
 {
+    /// Validates this value for being compliant to the specified constraint
+    /// `C` in the given context `S`.
     fn validate(self, context: impl Into<S>, constraint: &C) -> Validation<C, Self>;
 }
 
