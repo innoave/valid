@@ -38,7 +38,7 @@ use std::ops::Deref;
 /// ```
 ///
 /// The problem with this approach is, that we can never be sure that the input
-/// string for the 'to' argument is a valid email address.
+/// string for the `to` argument is a valid email address.
 ///
 /// Lets rewrite the same function using `Validated<Email, String>`.
 ///
@@ -57,14 +57,14 @@ use std::ops::Deref;
 /// ```rust,ignore //TODO remove ignore when Email constraint is implemented
 /// use valid::{Validated, Validate};
 ///
+/// fn send_email(to: Validated<Email, String>, message: String) {
+///     unimplemented!()
+/// }
+///
 /// let to_addr = "jane.doe@email.net".to_string().validate("email", Email).result(None)
 ///         .expect("valid email address");
 ///
 /// send_email(to_addr, "some message".into());
-///
-/// fn send_email(to: Validated<String>, message: String) {
-///     unimplemented!()
-/// }
 /// ```
 ///
 /// Now we can be sure that the variable `to_addr` contains a valid email
@@ -76,6 +76,10 @@ use std::ops::Deref;
 ///
 /// ```rust,ignore //TODO remove ignore when Email constraint is implemented
 /// use valid::{Validate, Validated};
+///
+/// fn send_email(to: EmailAddress, message: String) {
+///     unimplemented!()
+/// }
 ///
 /// mod domain_model {
 ///     use valid::Validated;
@@ -94,10 +98,6 @@ use std::ops::Deref;
 /// let to_addr = EmailAddress::from(validated);
 ///
 /// send_email(to_addr, "some message".into());
-///
-/// fn send_email(to: EmailAddress, message: String) {
-///     unimplemented!()
-/// }
 /// ```
 ///
 /// Due to the type `EmailAddress` is defined in another module it can only be
