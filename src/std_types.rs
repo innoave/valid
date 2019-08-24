@@ -1,4 +1,4 @@
-use crate::constraint::{HasCharCount, HasElement, HasLength, IsEmptyValue};
+use crate::property::{HasCharCount, HasLength, HasMember, IsEmptyValue};
 use std::collections::{HashMap, HashSet};
 use std::hash::{BuildHasher, Hash};
 
@@ -98,28 +98,28 @@ impl HasCharCount for &[char] {
     }
 }
 
-impl HasElement<String> for String {
-    fn has_element(&self, element: &String) -> bool {
+impl HasMember<String> for String {
+    fn has_member(&self, element: &String) -> bool {
         self.contains(element)
     }
 }
 
-impl<V, S> HasElement<V> for HashSet<V, S>
+impl<V, S> HasMember<V> for HashSet<V, S>
 where
     V: Eq + Hash,
     S: BuildHasher,
 {
-    fn has_element(&self, element: &V) -> bool {
+    fn has_member(&self, element: &V) -> bool {
         self.contains(element)
     }
 }
 
-impl<K, V, S> HasElement<K> for HashMap<K, V, S>
+impl<K, V, S> HasMember<K> for HashMap<K, V, S>
 where
     K: Eq + Hash,
     S: BuildHasher,
 {
-    fn has_element(&self, element: &K) -> bool {
+    fn has_member(&self, element: &K) -> bool {
         self.contains_key(element)
     }
 }

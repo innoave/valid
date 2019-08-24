@@ -1,3 +1,4 @@
+use crate::property::{DecimalDigits, HasCharCount, HasLength, HasMember, IsEmptyValue};
 use crate::{
     invalid_optional_value, invalid_relation, invalid_value, FieldName, RelatedFields, Validate,
     Validation, Value,
@@ -61,10 +62,6 @@ impl Validate<AssertFalse, FieldName> for bool {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NotEmpty;
 
-pub trait IsEmptyValue {
-    fn is_empty_value(&self) -> bool;
-}
-
 impl<T> Validate<NotEmpty, FieldName> for T
 where
     T: IsEmptyValue,
@@ -89,10 +86,6 @@ pub enum Length {
     Max(usize),
     Min(usize),
     MinMax(usize, usize),
-}
-
-pub trait HasLength {
-    fn length(&self) -> usize;
 }
 
 impl<T> Validate<Length, FieldName> for T
@@ -146,10 +139,6 @@ pub enum CharCount {
     Max(usize),
     Min(usize),
     MinMax(usize, usize),
-}
-
-pub trait HasCharCount {
-    fn char_count(&self) -> usize;
 }
 
 impl<T> Validate<CharCount, FieldName> for T
@@ -270,14 +259,9 @@ pub struct Digits {
     pub fraction: u64,
 }
 
-pub trait Decimal {
-    fn integer_digits(&self) -> u64;
-    fn fraction_digits(&self) -> u64;
-}
-
 impl<T> Validate<Digits, FieldName> for T
 where
-    T: Decimal,
+    T: DecimalDigits,
 {
     fn validate(self, name: impl Into<FieldName>, constraint: &Digits) -> Validation<Self> {
         let integer = self.integer_digits();
@@ -318,13 +302,9 @@ where
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Contains<'a, A>(pub &'a A);
 
-pub trait HasElement<A> {
-    fn has_element(&self, element: &A) -> bool;
-}
-
 impl<'a, T, A> Validate<Contains<'a, A>, FieldName> for T
 where
-    T: HasElement<A>,
+    T: HasMember<A>,
     A: Clone,
     Value: From<A> + From<T>,
 {
@@ -333,7 +313,7 @@ where
         name: impl Into<FieldName>,
         constraint: &Contains<'a, A>,
     ) -> Validation<Self> {
-        if self.has_element(&constraint.0) {
+        if self.has_member(&constraint.0) {
             Validation::Success(self)
         } else {
             Validation::Failure(vec![invalid_value(

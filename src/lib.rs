@@ -73,6 +73,27 @@
 //! * `ConstraintViolation::State(InvalidState)`
 //!
 //!
+//! ## Generic implementation of constraints and properties
+//!
+//! The validation function of the [`Validate`](trait.Validate.html) trait is
+//! applied to the combination of a constraint and a value. To validate some
+//! constraint `C` for a value of type `T` the `Validate` trait must be
+//! implemented for the combination of these two types.
+//!
+//! Most primitive constraints evaluate one property of a value, such as the
+//! length of a string or the number of fraction digits of a decimal number.
+//! If we use traits to determine the relevant property of a value (lets call
+//! them property traits) we can implement the `Validate` trait for all types
+//! `T` that implement the according property trait.
+//!
+//! This crate implements the `Validate` trait for all provided constraints
+//! for all generic types `T` that implement a certain property trait. If there
+//! is a trait suitable as a property trait defined by the std-lib we use that
+//! otherwise we define our own trait.
+//!
+//! The property traits defined by this crate are found in the
+//! [`property`](mod.property.html) module.
+//!
 //!
 //! ## Examples
 //!
@@ -137,6 +158,7 @@
 mod bigdecimal;
 pub mod constraint;
 mod core;
+pub mod property;
 mod std_types;
 
 // re-export all the core types
