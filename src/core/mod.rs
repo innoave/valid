@@ -11,15 +11,17 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Write};
 use std::iter::FromIterator;
+use std::marker::PhantomData;
 use std::ops::Deref;
 
 /// A wrapper type to express that the value of type `T` has been validated
 ///
-/// The idea is that a `Validated<T>` can only be obtained by validating a value
-/// of type `T`. There is no way to construct an instance of `Validated` other
-/// than using a validation function.
+/// The idea is that an instance of `Validated<C, T>` can only be obtained by
+/// validating a value of type `T` using the constraint `C`. There is no way to
+/// construct an instance of `Validated` directly.
 ///
-/// It follows the new type pattern and can be de-referenced to its inner value.
+/// It follows the new type pattern and can be de-referenced to a immutable
+/// reference to its inner value or unwrapped to get the owned inner value.
 ///
 /// In an application we can make use of the type system to assure that only
 /// valid values of some type can be input to some function performing some
@@ -37,12 +39,12 @@ use std::ops::Deref;
 /// The problem with this approach is, that we can never be sure that the input
 /// string for the 'to' argument is a valid email address.
 ///
-/// Lets rewrite the same function using `Validated<String>`.
+/// Lets rewrite the same function using `Validated<Email, String>`.
 ///
-/// ```rust
+/// ```rust,ignore //TODO remove ignore when Email constraint is implemented
 /// use valid::Validated;
 ///
-/// fn send_email(to: Validated<String>, message: String) {
+/// fn send_email(to: Validated<Email, String>, message: String) {
 ///     unimplemented!()
 /// }
 /// ```
@@ -54,20 +56,22 @@ use std::ops::Deref;
 /// ```rust,ignore //TODO remove ignore when Email constraint is implemented
 /// use valid::{Validated, Validate};
 ///
-/// let to_address = "jane.doe@email.net".to_string().validate("email", Email).result(None)
+/// let to_addr = "jane.doe@email.net".to_string().validate("email", Email).result(None)
 ///         .expect("valid email address");
 ///
-/// send_email(to_address, "some message".into());
+/// send_email(to_addr, "some message".into());
 ///
 /// fn send_email(to: Validated<String>, message: String) {
 ///     unimplemented!()
 /// }
 /// ```
 ///
-/// Now the at least we know that the string is somehow validated.
+/// Now we can be sure that the variable `to_addr` contains a valid email
+/// address.
 ///
-/// As a bonus you might define a custom new type for email addresses, that can
-/// only be constructed from a validated value like so:
+/// To further make use of meaningful new types we might define a custom new
+/// type for email addresses, that can only be constructed from a validated
+/// value like so:
 ///
 /// ```rust,ignore //TODO remove ignore when Email constraint is implemented
 /// use valid::{Validate, Validated};
@@ -76,7 +80,7 @@ use std::ops::Deref;
 ///     use valid::Validated;
 ///     pub struct EmailAddress(String);
 ///
-///     impl From<Validated<String>> for EmailAddress {
+///     impl From<Validated<Email, String>> for EmailAddress {
 ///         fn from(value: Validated<String>) -> Self {
 ///             EmailAddress(value.unwrap())
 ///         }
@@ -86,9 +90,9 @@ use std::ops::Deref;
 /// let validated = "jane.doe@email.net".to_string().validate("email", Email).result(None)
 ///         .expect("valid email address");
 ///
-/// let to_address = EmailAddress::from(validated);
+/// let to_addr = EmailAddress::from(validated);
 ///
-/// send_email(to_address, "some message".into());
+/// send_email(to_addr, "some message".into());
 ///
 /// fn send_email(to: EmailAddress, message: String) {
 ///     unimplemented!()
@@ -96,22 +100,22 @@ use std::ops::Deref;
 /// ```
 ///
 /// Due to the type `EmailAddress` is defined in another module it can only be
-/// constructed from a `Validated<String>`.
+/// constructed from a `Validated<Email, String>`.
 ///
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Validated<T>(T);
+pub struct Validated<C, T>(PhantomData<C>, T);
 
-impl<T> Validated<T> {
+impl<C, T> Validated<C, T> {
     pub fn unwrap(self) -> T {
-        self.0
+        self.1
     }
 }
 
-impl<T> Deref for Validated<T> {
+impl<C, T> Deref for Validated<C, T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.1
     }
 }
 
@@ -120,7 +124,7 @@ where
     S: Context,
     Self: Sized,
 {
-    fn validate(self, context: impl Into<S>, constraint: &C) -> Validation<Self>;
+    fn validate(self, context: impl Into<S>, constraint: &C) -> Validation<C, Self>;
 }
 
 mod private {
@@ -539,30 +543,30 @@ impl ValidationError {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Validation<T> {
-    Success(T),
+pub enum Validation<C, T> {
+    Success(PhantomData<C>, T),
     Failure(Vec<ConstraintViolation>),
 }
 
-impl<T> From<ConstraintViolation> for Validation<T> {
+impl<C, T> From<ConstraintViolation> for Validation<C, T> {
     fn from(constraint_violation: ConstraintViolation) -> Self {
         Validation::Failure(vec![constraint_violation])
     }
 }
 
-impl<T> From<Vec<ConstraintViolation>> for Validation<T> {
+impl<C, T> From<Vec<ConstraintViolation>> for Validation<C, T> {
     fn from(constraint_violations: Vec<ConstraintViolation>) -> Self {
         Validation::Failure(constraint_violations)
     }
 }
 
-impl<T> Validation<T> {
+impl<C, T> Validation<C, T> {
     pub fn result(
         self,
         message: impl Into<Option<Cow<'static, str>>>,
-    ) -> Result<Validated<T>, ValidationError> {
+    ) -> Result<Validated<C, T>, ValidationError> {
         match self {
-            Validation::Success(entity) => Ok(Validated(entity)),
+            Validation::Success(_c, entity) => Ok(Validated(_c, entity)),
             Validation::Failure(violations) => Err(ValidationError {
                 message: message.into(),
                 violations,
@@ -570,18 +574,20 @@ impl<T> Validation<T> {
         }
     }
 
-    pub fn and<C, S, U>(self, context: impl Into<S>, constraint: &C, entity: U) -> Validation<()>
+    pub fn and<D, S, U>(self, context: impl Into<S>, constraint: &D, entity: U) -> Validation<D, ()>
     where
         S: Context,
-        U: Validate<C, S>,
+        U: Validate<D, S>,
     {
         let other = entity.validate(context, constraint);
         match (self, other) {
-            (Validation::Success(_), Validation::Success(_)) => Validation::Success(()),
-            (Validation::Failure(violations), Validation::Success(_)) => {
+            (Validation::Success(_, _), Validation::Success(_, _)) => {
+                Validation::Success(PhantomData, ())
+            }
+            (Validation::Failure(violations), Validation::Success(_, _)) => {
                 Validation::Failure(violations)
             }
-            (Validation::Success(_), Validation::Failure(violations)) => {
+            (Validation::Success(_, _), Validation::Failure(violations)) => {
                 Validation::Failure(violations)
             }
             (Validation::Failure(mut violations), Validation::Failure(violations2)) => {
@@ -591,25 +597,25 @@ impl<T> Validation<T> {
         }
     }
 
-    pub fn and_then<C, S, U>(
+    pub fn and_then<D, S, U>(
         self,
         context: impl Into<S>,
-        constraint: &C,
+        constraint: &D,
         entity: U,
-    ) -> Validation<U>
+    ) -> Validation<D, U>
     where
         S: Context,
-        U: Validate<C, S>,
+        U: Validate<D, S>,
     {
         match self {
-            Validation::Success(_) => entity.validate(context, constraint),
+            Validation::Success(_, _) => entity.validate(context, constraint),
             Validation::Failure(error) => Validation::Failure(error),
         }
     }
 
     pub fn is_success(&self) -> bool {
         match self {
-            Validation::Success(_) => true,
+            Validation::Success(_, _) => true,
             Validation::Failure(_) => false,
         }
     }

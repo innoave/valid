@@ -17,6 +17,7 @@ use crate::{
     invalid_optional_value, invalid_relation, invalid_value, FieldName, RelatedFields, Validate,
     Validation, Value,
 };
+use std::marker::PhantomData;
 
 /// Error code: the value does not assert to true (`AssertTrue` constraint)
 pub const INVALID_ASSERT_TRUE: &str = "invalid.assert.true";
@@ -99,9 +100,13 @@ pub const INVALID_FROM_TO_EXCLUSIVE: &str = "invalid.from.to.exclusive";
 pub struct AssertTrue;
 
 impl Validate<AssertTrue, FieldName> for bool {
-    fn validate(self, name: impl Into<FieldName>, _constraint: &AssertTrue) -> Validation<Self> {
+    fn validate(
+        self,
+        name: impl Into<FieldName>,
+        _constraint: &AssertTrue,
+    ) -> Validation<AssertTrue, Self> {
         if self {
-            Validation::Success(self)
+            Validation::Success(PhantomData, self)
         } else {
             Validation::Failure(vec![invalid_value(INVALID_ASSERT_TRUE, name, self, true)])
         }
@@ -113,11 +118,15 @@ impl Validate<AssertTrue, FieldName> for bool {
 pub struct AssertFalse;
 
 impl Validate<AssertFalse, FieldName> for bool {
-    fn validate(self, name: impl Into<FieldName>, _constraint: &AssertFalse) -> Validation<Self> {
+    fn validate(
+        self,
+        name: impl Into<FieldName>,
+        _constraint: &AssertFalse,
+    ) -> Validation<AssertFalse, Self> {
         if self {
             Validation::Failure(vec![invalid_value(INVALID_ASSERT_FALSE, name, self, false)])
         } else {
-            Validation::Success(self)
+            Validation::Success(PhantomData, self)
         }
     }
 }
@@ -130,7 +139,11 @@ impl<T> Validate<NotEmpty, FieldName> for T
 where
     T: IsEmptyValue,
 {
-    fn validate(self, name: impl Into<FieldName>, _constraint: &NotEmpty) -> Validation<Self> {
+    fn validate(
+        self,
+        name: impl Into<FieldName>,
+        _constraint: &NotEmpty,
+    ) -> Validation<NotEmpty, Self> {
         if self.is_empty_value() {
             Validation::Failure(vec![invalid_optional_value(
                 INVALID_NOT_EMPTY,
@@ -139,7 +152,7 @@ where
                 None,
             )])
         } else {
-            Validation::Success(self)
+            Validation::Success(PhantomData, self)
         }
     }
 }
@@ -164,7 +177,7 @@ impl<T> Validate<Length, FieldName> for T
 where
     T: HasLength,
 {
-    fn validate(self, name: impl Into<FieldName>, constraint: &Length) -> Validation<Self> {
+    fn validate(self, name: impl Into<FieldName>, constraint: &Length) -> Validation<Length, Self> {
         let length = self.length();
         if let Some((code, expected)) = match *constraint {
             Length::Exact(exact_len) => {
@@ -200,7 +213,7 @@ where
         } {
             Validation::Failure(vec![invalid_value(code, name, self.length(), expected)])
         } else {
-            Validation::Success(self)
+            Validation::Success(PhantomData, self)
         }
     }
 }
@@ -225,7 +238,11 @@ impl<T> Validate<CharCount, FieldName> for T
 where
     T: HasCharCount,
 {
-    fn validate(self, name: impl Into<FieldName>, constraint: &CharCount) -> Validation<Self> {
+    fn validate(
+        self,
+        name: impl Into<FieldName>,
+        constraint: &CharCount,
+    ) -> Validation<CharCount, Self> {
         let char_count = self.char_count();
         if let Some((code, expected)) = match *constraint {
             CharCount::Exact(exact_val) => {
@@ -261,7 +278,7 @@ where
         } {
             Validation::Failure(vec![invalid_value(code, name, self.char_count(), expected)])
         } else {
-            Validation::Success(self)
+            Validation::Success(PhantomData, self)
         }
     }
 }
@@ -290,7 +307,11 @@ where
     T: PartialEq + PartialOrd + Clone,
     Value: From<T>,
 {
-    fn validate(self, name: impl Into<FieldName>, constraint: &Bound<T>) -> Validation<Self> {
+    fn validate(
+        self,
+        name: impl Into<FieldName>,
+        constraint: &Bound<T>,
+    ) -> Validation<Bound<T>, Self> {
         if let Some((code, expected)) = match constraint {
             Bound::Exact(bound) => {
                 if *bound != self {
@@ -338,7 +359,7 @@ where
         } {
             Validation::Failure(vec![invalid_value(code, name, self, expected)])
         } else {
-            Validation::Success(self)
+            Validation::Success(PhantomData, self)
         }
     }
 }
@@ -358,12 +379,12 @@ impl<T> Validate<Digits, FieldName> for T
 where
     T: DecimalDigits,
 {
-    fn validate(self, name: impl Into<FieldName>, constraint: &Digits) -> Validation<Self> {
+    fn validate(self, name: impl Into<FieldName>, constraint: &Digits) -> Validation<Digits, Self> {
         let integer = self.integer_digits();
         let fraction = self.fraction_digits();
         if integer <= constraint.integer {
             if fraction <= constraint.fraction {
-                Validation::Success(self)
+                Validation::Success(PhantomData, self)
             } else {
                 Validation::Failure(vec![invalid_value(
                     INVALID_DIGITS_FRACTION,
@@ -409,9 +430,9 @@ where
         self,
         name: impl Into<FieldName>,
         constraint: &Contains<'a, A>,
-    ) -> Validation<Self> {
+    ) -> Validation<Contains<'a, A>, Self> {
         if self.has_member(&constraint.0) {
-            Validation::Success(self)
+            Validation::Success(PhantomData, self)
         } else {
             Validation::Failure(vec![invalid_value(
                 INVALID_CONTAINS_ELEMENT,
@@ -436,10 +457,10 @@ where
         self,
         fields: impl Into<RelatedFields>,
         _constraint: &MustMatch,
-    ) -> Validation<Self> {
+    ) -> Validation<MustMatch, Self> {
         let RelatedFields(name1, name2) = fields.into();
         if self.0 == self.1 {
-            Validation::Success(self)
+            Validation::Success(PhantomData, self)
         } else {
             Validation::Failure(vec![invalid_relation(
                 INVALID_MUST_MATCH,
@@ -467,12 +488,16 @@ where
     T: PartialEq + PartialOrd,
     Value: From<T>,
 {
-    fn validate(self, fields: impl Into<RelatedFields>, constraint: &FromTo) -> Validation<Self> {
+    fn validate(
+        self,
+        fields: impl Into<RelatedFields>,
+        constraint: &FromTo,
+    ) -> Validation<FromTo, Self> {
         let RelatedFields(name1, name2) = fields.into();
         match *constraint {
             FromTo::Inclusive => {
                 if self.0 <= self.1 {
-                    Validation::Success(self)
+                    Validation::Success(PhantomData, self)
                 } else {
                     Validation::Failure(vec![invalid_relation(
                         INVALID_FROM_TO_INCLUSIVE,
@@ -485,7 +510,7 @@ where
             }
             FromTo::Exclusive => {
                 if self.0 < self.1 {
-                    Validation::Success(self)
+                    Validation::Success(PhantomData, self)
                 } else {
                     Validation::Failure(vec![invalid_relation(
                         INVALID_FROM_TO_EXCLUSIVE,
