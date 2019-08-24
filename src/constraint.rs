@@ -12,7 +12,7 @@
 //! screaming snake case. The string values of the error codes follow a similar
 //! naming convention.
 
-use crate::property::{DecimalDigits, HasCharCount, HasLength, HasMember, IsEmptyValue};
+use crate::property::{DecimalDigits, HasCharCount, HasLength, HasMember, IsChecked, IsEmptyValue};
 use crate::{
     invalid_optional_value, invalid_relation, invalid_value, FieldName, RelatedFields, Validate,
     Validation, Value,
@@ -94,43 +94,64 @@ pub const INVALID_FROM_TO_INCLUSIVE: &str = "invalid.from.to.inclusive";
 /// (`FromTo::Exclusive` constraint)
 pub const INVALID_FROM_TO_EXCLUSIVE: &str = "invalid.from.to.exclusive";
 
-/// The value must be true
+/// The value must be true.
+///
+/// The validation function can be applied in the
+/// [`FieldName`](../core/struct.FieldName.html) context.
+/// It is implemented for all types `T` that implement the
+/// [`IsChecked`](../property/trait.IsChecked.html) property trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AssertTrue;
 
-impl Validate<AssertTrue, FieldName> for bool {
+impl<T> Validate<AssertTrue, FieldName> for T
+where
+    T: IsChecked,
+{
     fn validate(
         self,
         name: impl Into<FieldName>,
         _constraint: &AssertTrue,
     ) -> Validation<AssertTrue, Self> {
-        if self {
+        if self.is_checked() {
             Validation::success(self)
         } else {
-            Validation::failure(vec![invalid_value(INVALID_ASSERT_TRUE, name, self, true)])
+            Validation::failure(vec![invalid_value(INVALID_ASSERT_TRUE, name, false, true)])
         }
     }
 }
 
-/// The value must be false
+/// The value must be false.
+///
+/// The validation function can be applied in the
+/// [`FieldName`](../core/struct.FieldName.html) context.
+/// It is implemented for all types `T` that implement the
+/// [`IsChecked`](../property/trait.IsChecked.html) property trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AssertFalse;
 
-impl Validate<AssertFalse, FieldName> for bool {
+impl<T> Validate<AssertFalse, FieldName> for T
+where
+    T: IsChecked,
+{
     fn validate(
         self,
         name: impl Into<FieldName>,
         _constraint: &AssertFalse,
     ) -> Validation<AssertFalse, Self> {
-        if self {
-            Validation::failure(vec![invalid_value(INVALID_ASSERT_FALSE, name, self, false)])
+        if self.is_checked() {
+            Validation::failure(vec![invalid_value(INVALID_ASSERT_FALSE, name, true, false)])
         } else {
             Validation::success(self)
         }
     }
 }
 
-/// The value must not be empty
+/// The value must not be empty.
+///
+/// The validation function can be applied in the
+/// [`FieldName`](../core/struct.FieldName.html) context.
+/// It is implemented for all types `T` that implement the
+/// [`IsEmptyValue`](../property/trait.IsEmptyValue.html) property trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NotEmpty;
 
@@ -156,7 +177,12 @@ where
     }
 }
 
-/// The length of a value must be within some bounds
+/// The length of a value must be within some bounds.
+///
+/// The validation function can be applied in the
+/// [`FieldName`](../core/struct.FieldName.html) context.
+/// It is implemented for all types `T` that implement the
+/// [`HasLength`](../property/trait.HasLength.html) property trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Length {
     /// The value must be of an exact length
@@ -217,7 +243,12 @@ where
     }
 }
 
-/// The number of characters must be within some bounds
+/// The number of characters must be within some bounds.
+///
+/// The validation function can be applied in the
+/// [`FieldName`](../core/struct.FieldName.html) context.
+/// It is implemented for all types `T` that implement the
+/// [`HasCharCount`](../property/trait.HasCharCount.html) property trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CharCount {
     /// The number of characters must be equal to the specified amount
@@ -282,7 +313,11 @@ where
     }
 }
 
-/// The value must be within some bounds
+/// The value must be within some bounds.
+///
+/// The validation function can be applied in the
+/// [`FieldName`](../core/struct.FieldName.html) context.
+/// It is implemented for all types `T` that implement the `PartialOrd` trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Bound<T> {
     /// The value must have the specified value
@@ -303,7 +338,7 @@ pub enum Bound<T> {
 
 impl<T> Validate<Bound<T>, FieldName> for T
 where
-    T: PartialEq + PartialOrd + Clone,
+    T: PartialOrd + Clone,
     Value: From<T>,
 {
     fn validate(
@@ -363,7 +398,12 @@ where
     }
 }
 
-/// Maximum number of allowed integer digits and fraction digits
+/// Maximum number of allowed integer digits and fraction digits.
+///
+/// The validation function can be applied in the
+/// [`FieldName`](../core/struct.FieldName.html) context.
+/// It is implemented for all types `T` that implement the
+/// [`DecimalDigits`](../property/trait.DecimalDigits.html) property trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Digits {
     /// Maximum number of allowed integer digits (digits to the left of the
@@ -416,6 +456,11 @@ where
 
 /// The value must contain the specified member or the specified member must be
 /// part of the value.
+///
+/// The validation function can be applied in the
+/// [`FieldName`](../core/struct.FieldName.html) context.
+/// It is implemented for all types `T` that implement the
+/// [`HasMember`](../property/trait.HasMember.html) property trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Contains<'a, A>(pub &'a A);
 
@@ -443,7 +488,11 @@ where
     }
 }
 
-/// Two related fields must be equal
+/// Two related fields must be equal.
+///
+/// The validation function can be applied in the
+/// [`RelatedFields`](../core/struct.RelatedFields.html) context.
+/// It is implemented for all types `T` that implement the `Eq` trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MustMatch;
 
@@ -472,7 +521,11 @@ where
     }
 }
 
-/// Two related fields must define a range
+/// Two related fields must define a range.
+///
+/// The validation function can be applied in the
+/// [`RelatedFields`](../core/struct.RelatedFields.html) context.
+/// It is implemented for all types `T` that implement the `PartialOrd` trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 //TODO find better name for `FromTo`
 pub enum FromTo {
@@ -484,7 +537,7 @@ pub enum FromTo {
 
 impl<T> Validate<FromTo, RelatedFields> for (T, T)
 where
-    T: PartialEq + PartialOrd,
+    T: PartialOrd,
     Value: From<T>,
 {
     fn validate(

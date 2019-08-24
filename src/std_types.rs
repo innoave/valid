@@ -1,6 +1,12 @@
-use crate::property::{HasCharCount, HasLength, HasMember, IsEmptyValue};
+use crate::property::{HasCharCount, HasLength, HasMember, IsChecked, IsEmptyValue};
 use std::collections::{HashMap, HashSet};
 use std::hash::{BuildHasher, Hash};
+
+impl IsChecked for bool {
+    fn is_checked(&self) -> bool {
+        *self
+    }
+}
 
 impl IsEmptyValue for String {
     fn is_empty_value(&self) -> bool {

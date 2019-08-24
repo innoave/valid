@@ -9,7 +9,16 @@
 //! can use the existing implementation of the `Validate` trait for the `Digits`
 //! constraint and our custom type.
 
-/// The empty property of a type
+/// The checked property of a type.
+///
+/// This can be property of enums with 2 variants that have a similar meaning to
+/// the boolean type, e.g. yes/no, agreed/rejected, open/closed,...
+pub trait IsChecked {
+    /// Returns whether this value represents `checked`
+    fn is_checked(&self) -> bool;
+}
+
+/// The empty property of a type.
 ///
 /// This is usually a property of some kind of container like `String`, `Vec`,
 /// `HashSet` or `HashMap`.
@@ -18,7 +27,7 @@ pub trait IsEmptyValue {
     fn is_empty_value(&self) -> bool;
 }
 
-/// The length property of a type
+/// The length property of a type.
 ///
 /// This is usually a property of some kind of container like `String`, `Vec`,
 /// `HashSet`, `HashMap` or `&[T]`.
@@ -27,7 +36,11 @@ pub trait HasLength {
     fn length(&self) -> usize;
 }
 
-/// The number of characters property of a type
+/// The number of characters property of a type.
+///
+/// Counts the number of contained characters. The character count may be
+/// different from the length if any character occupies more than one byte in
+/// memory.
 ///
 /// This is usually a property of a container of `char`s like `String`,
 /// `Vec<char>` or `&[char]`
@@ -36,7 +49,7 @@ pub trait HasCharCount {
     fn char_count(&self) -> usize;
 }
 
-/// Properties of a decimal number
+/// Properties of a decimal number.
 pub trait DecimalDigits {
     /// Returns the number of integer digits
     ///
@@ -50,7 +63,7 @@ pub trait DecimalDigits {
 }
 
 /// Determines whether the given element is part of a value or member of
-/// a collection
+/// a collection.
 ///
 /// This is usually a property of some kind of container like `String`, `Vec`,
 /// `HashSet` or `&[T]`.
