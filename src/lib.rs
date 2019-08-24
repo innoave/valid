@@ -17,14 +17,14 @@
 //! this:
 //!
 //! ```rust,ignore
-//! fn validate<T, S, C>(value: T, context: S, constraint: C) -> Result<Validated<T>, ValidationError>;
+//! fn validate<T, S, C>(value: T, context: S, constraint: C) -> Result<Validated<C, T>, ValidationError>;
 //! ```
 //!
 //! This function takes a value `T`, a context S, and a constraint definition
-//! `C` as input and returns a result that is either a `Validated<T>` or a
+//! `C` as input and returns a result that is either a `Validated<C, T>` or a
 //! `ValidationError`. So we might define the validation function as a function
-//! that converts a type `T` into some `Validated<T>` or returns an error if one
-//! of the defined constraints is violated.
+//! that converts a type `T` into some `Validated<C, T>` or returns an error if
+//! one of the defined constraints is violated.
 //!
 //! The actual validation function of this crate is defined by the
 //! [`Validate`](trait.Validate.html) trait. The only difference to the function
