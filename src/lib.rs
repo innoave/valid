@@ -5,6 +5,9 @@
 //! validation function again can be used to build validations for even more
 //! complex types.
 //!
+//! This crate provides some constraints. Those built in constraints are found
+//! in the [`constraint`](mod.constraint.html) module.
+//!
 //! ## Validation function, constraints and context
 //!
 //! The goal of the validation is to confirm that a given value of type `T` is
@@ -100,7 +103,7 @@
 //! Successful validation of a simple variable:
 //!
 //! ```
-//! use valid::{Validate, Validated};
+//! use valid::Validate;
 //! use valid::constraint::Length;
 //!
 //! let text = String::from("the answer is 42");
@@ -162,5 +165,9 @@ mod core;
 pub mod property;
 mod std_types;
 
-// re-export all the core types
-pub use crate::core::*;
+// re-export the core API
+pub use crate::core::{
+    invalid_optional_value, invalid_relation, invalid_state, invalid_value, ConstraintViolation,
+    Field, FieldName, InvalidRelation, InvalidState, InvalidValue, RelatedFields, State, Validate,
+    Validated, Validation, ValidationError, Value,
+};

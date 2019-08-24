@@ -1,4 +1,4 @@
-//! The core API of the `valid` crate.
+//! The core API of the `valid` crate
 
 #[cfg(feature = "bigdecimal")]
 use bigdecimal::BigDecimal;
@@ -10,9 +10,95 @@ use std::borrow::Cow;
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Write};
+use std::iter::FromIterator;
 use std::ops::Deref;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+/// A wrapper type to express that the value of type `T` has been validated
+///
+/// The idea is that a `Validated<T>` can only be obtained by validating a value
+/// of type `T`. There is no way to construct an instance of `Validated` other
+/// than using a validation function.
+///
+/// It follows the new type pattern and can be de-referenced to its inner value.
+///
+/// In an application we can make use of the type system to assure that only
+/// valid values of some type can be input to some function performing some
+/// domain related things.
+///
+/// For example, lets assume we have a function that expects a valid email
+/// address as input. We could write the function like:
+///
+/// ```rust
+/// fn send_email(to: String, message: String) {
+///     unimplemented!()
+/// }
+/// ```
+///
+/// The problem with this approach is, that we can never be sure that the input
+/// string for the 'to' argument is a valid email address.
+///
+/// Lets rewrite the same function using `Validated<String>`.
+///
+/// ```rust
+/// use valid::Validated;
+///
+/// fn send_email(to: Validated<String>, message: String) {
+///     unimplemented!()
+/// }
+/// ```
+///
+/// Due to we can not instantiate `Validated` directly using some constructor
+/// function like `Validated(email)` or `Validated::new(email)` we need to use
+/// a validation function like:
+///
+/// ```rust,ignore //TODO remove ignore when Email constraint is implemented
+/// use valid::{Validated, Validate};
+///
+/// let to_address = "jane.doe@email.net".to_string().validate("email", Email).result(None)
+///         .expect("valid email address");
+///
+/// send_email(to_address, "some message".into());
+///
+/// fn send_email(to: Validated<String>, message: String) {
+///     unimplemented!()
+/// }
+/// ```
+///
+/// Now the at least we know that the string is somehow validated.
+///
+/// As a bonus you might define a custom new type for email addresses, that can
+/// only be constructed from a validated value like so:
+///
+/// ```rust,ignore //TODO remove ignore when Email constraint is implemented
+/// use valid::{Validate, Validated};
+///
+/// mod domain_model {
+///     use valid::Validated;
+///     pub struct EmailAddress(String);
+///
+///     impl From<Validated<String>> for EmailAddress {
+///         fn from(value: Validated<String>) -> Self {
+///             EmailAddress(value.unwrap())
+///         }
+///     }
+/// }
+///
+/// let validated = "jane.doe@email.net".to_string().validate("email", Email).result(None)
+///         .expect("valid email address");
+///
+/// let to_address = EmailAddress::from(validated);
+///
+/// send_email(to_address, "some message".into());
+///
+/// fn send_email(to: EmailAddress, message: String) {
+///     unimplemented!()
+/// }
+/// ```
+///
+/// Due to the type `EmailAddress` is defined in another module it can only be
+/// constructed from a `Validated<String>`.
+///
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Validated<T>(T);
 
 impl<T> Validated<T> {
@@ -587,11 +673,14 @@ pub fn invalid_relation(
     })
 }
 
-pub fn fail(message: Option<Cow<'static, str>>, violation: ConstraintViolation) -> ValidationError {
-    ValidationError {
-        message,
-        violations: vec![violation],
-    }
+pub fn invalid_state(
+    code: impl Into<Cow<'static, str>>,
+    params: impl IntoIterator<Item = Field>,
+) -> ConstraintViolation {
+    ConstraintViolation::State(InvalidState {
+        code: code.into(),
+        params: Vec::from_iter(params.into_iter()),
+    })
 }
 
 #[cfg(test)]
