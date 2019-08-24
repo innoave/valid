@@ -143,7 +143,7 @@
     bare_trait_objects,
     missing_copy_implementations,
     missing_debug_implementations,
-//    missing_docs,
+    missing_docs,
     rust_2018_idioms,
     trivial_casts,
     trivial_numeric_casts,
@@ -157,6 +157,7 @@
 #[cfg(feature = "bigdecimal")]
 mod bigdecimal;
 pub mod constraint;
+#[allow(missing_docs)]
 mod core;
 pub mod property;
 mod std_types;

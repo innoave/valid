@@ -55,5 +55,7 @@ pub trait DecimalDigits {
 /// This is usually a property of some kind of container like `String`, `Vec`,
 /// `HashSet` or `&[T]`.
 pub trait HasMember<A> {
+    /// Returns whether the given element is part of this value or a member of
+    /// it
     fn has_member(&self, element: &A) -> bool;
 }
