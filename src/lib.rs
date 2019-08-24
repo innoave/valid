@@ -5,9 +5,6 @@
 //! validation function again can be used to build validations for even more
 //! complex types.
 //!
-//! This crate provides some constraints. Those built in constraints are found
-//! in the [`constraint`](mod.constraint.html) module.
-//!
 //! ## Validation function, constraints and context
 //!
 //! The goal of the validation is to confirm that a given value of type `T` is
@@ -37,6 +34,9 @@
 //! limit. As another example a constraint may define that two fields must
 //! match. Additionally business rules may be defined for an application such as
 //! that an identifier must be unique within an application.
+//!
+//! This crate provides some constraints. Those built in constraints are found
+//! in the [`constraint`](mod.constraint.html) module.
 //!
 //! In this library constraints are assigned to one of 3 categories:
 //!

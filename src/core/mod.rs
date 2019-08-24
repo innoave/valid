@@ -548,19 +548,15 @@ pub enum Validation<C, T> {
     Failure(Vec<ConstraintViolation>),
 }
 
-impl<C, T> From<ConstraintViolation> for Validation<C, T> {
-    fn from(constraint_violation: ConstraintViolation) -> Self {
-        Validation::Failure(vec![constraint_violation])
-    }
-}
-
-impl<C, T> From<Vec<ConstraintViolation>> for Validation<C, T> {
-    fn from(constraint_violations: Vec<ConstraintViolation>) -> Self {
-        Validation::Failure(constraint_violations)
-    }
-}
-
 impl<C, T> Validation<C, T> {
+    pub fn success(valid: T) -> Self {
+        Validation::Success(PhantomData, valid)
+    }
+
+    pub fn failure(constraint_violations: impl IntoIterator<Item = ConstraintViolation>) -> Self {
+        Validation::Failure(Vec::from_iter(constraint_violations.into_iter()))
+    }
+
     pub fn result(
         self,
         message: impl Into<Option<Cow<'static, str>>>,
@@ -581,18 +577,16 @@ impl<C, T> Validation<C, T> {
     {
         let other = entity.validate(context, constraint);
         match (self, other) {
-            (Validation::Success(_, _), Validation::Success(_, _)) => {
-                Validation::Success(PhantomData, ())
-            }
+            (Validation::Success(_, _), Validation::Success(_, _)) => Validation::success(()),
             (Validation::Failure(violations), Validation::Success(_, _)) => {
-                Validation::Failure(violations)
+                Validation::failure(violations)
             }
             (Validation::Success(_, _), Validation::Failure(violations)) => {
-                Validation::Failure(violations)
+                Validation::failure(violations)
             }
             (Validation::Failure(mut violations), Validation::Failure(violations2)) => {
                 violations.extend(violations2);
-                Validation::Failure(violations)
+                Validation::failure(violations)
             }
         }
     }
@@ -609,19 +603,8 @@ impl<C, T> Validation<C, T> {
     {
         match self {
             Validation::Success(_, _) => entity.validate(context, constraint),
-            Validation::Failure(error) => Validation::Failure(error),
+            Validation::Failure(error) => Validation::failure(error),
         }
-    }
-
-    pub fn is_success(&self) -> bool {
-        match self {
-            Validation::Success(_, _) => true,
-            Validation::Failure(_) => false,
-        }
-    }
-
-    pub fn is_failure(&self) -> bool {
-        !self.is_success()
     }
 }
 

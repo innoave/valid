@@ -17,7 +17,6 @@ use crate::{
     invalid_optional_value, invalid_relation, invalid_value, FieldName, RelatedFields, Validate,
     Validation, Value,
 };
-use std::marker::PhantomData;
 
 /// Error code: the value does not assert to true (`AssertTrue` constraint)
 pub const INVALID_ASSERT_TRUE: &str = "invalid.assert.true";
@@ -106,9 +105,9 @@ impl Validate<AssertTrue, FieldName> for bool {
         _constraint: &AssertTrue,
     ) -> Validation<AssertTrue, Self> {
         if self {
-            Validation::Success(PhantomData, self)
+            Validation::success(self)
         } else {
-            Validation::Failure(vec![invalid_value(INVALID_ASSERT_TRUE, name, self, true)])
+            Validation::failure(vec![invalid_value(INVALID_ASSERT_TRUE, name, self, true)])
         }
     }
 }
@@ -124,9 +123,9 @@ impl Validate<AssertFalse, FieldName> for bool {
         _constraint: &AssertFalse,
     ) -> Validation<AssertFalse, Self> {
         if self {
-            Validation::Failure(vec![invalid_value(INVALID_ASSERT_FALSE, name, self, false)])
+            Validation::failure(vec![invalid_value(INVALID_ASSERT_FALSE, name, self, false)])
         } else {
-            Validation::Success(PhantomData, self)
+            Validation::success(self)
         }
     }
 }
@@ -145,14 +144,14 @@ where
         _constraint: &NotEmpty,
     ) -> Validation<NotEmpty, Self> {
         if self.is_empty_value() {
-            Validation::Failure(vec![invalid_optional_value(
+            Validation::failure(vec![invalid_optional_value(
                 INVALID_NOT_EMPTY,
                 name,
                 None,
                 None,
             )])
         } else {
-            Validation::Success(PhantomData, self)
+            Validation::success(self)
         }
     }
 }
@@ -211,9 +210,9 @@ where
                 }
             }
         } {
-            Validation::Failure(vec![invalid_value(code, name, self.length(), expected)])
+            Validation::failure(vec![invalid_value(code, name, self.length(), expected)])
         } else {
-            Validation::Success(PhantomData, self)
+            Validation::success(self)
         }
     }
 }
@@ -276,9 +275,9 @@ where
                 }
             }
         } {
-            Validation::Failure(vec![invalid_value(code, name, self.char_count(), expected)])
+            Validation::failure(vec![invalid_value(code, name, self.char_count(), expected)])
         } else {
-            Validation::Success(PhantomData, self)
+            Validation::success(self)
         }
     }
 }
@@ -357,9 +356,9 @@ where
                 }
             }
         } {
-            Validation::Failure(vec![invalid_value(code, name, self, expected)])
+            Validation::failure(vec![invalid_value(code, name, self, expected)])
         } else {
-            Validation::Success(PhantomData, self)
+            Validation::success(self)
         }
     }
 }
@@ -384,9 +383,9 @@ where
         let fraction = self.fraction_digits();
         if integer <= constraint.integer {
             if fraction <= constraint.fraction {
-                Validation::Success(PhantomData, self)
+                Validation::success(self)
             } else {
-                Validation::Failure(vec![invalid_value(
+                Validation::failure(vec![invalid_value(
                     INVALID_DIGITS_FRACTION,
                     name,
                     fraction,
@@ -394,7 +393,7 @@ where
                 )])
             }
         } else if fraction <= constraint.fraction {
-            Validation::Failure(vec![invalid_value(
+            Validation::failure(vec![invalid_value(
                 INVALID_DIGITS_INTEGER,
                 name,
                 integer,
@@ -402,7 +401,7 @@ where
             )])
         } else {
             let name = name.into();
-            Validation::Failure(vec![
+            Validation::failure(vec![
                 invalid_value(
                     INVALID_DIGITS_INTEGER,
                     name.clone(),
@@ -432,9 +431,9 @@ where
         constraint: &Contains<'a, A>,
     ) -> Validation<Contains<'a, A>, Self> {
         if self.has_member(&constraint.0) {
-            Validation::Success(PhantomData, self)
+            Validation::success(self)
         } else {
-            Validation::Failure(vec![invalid_value(
+            Validation::failure(vec![invalid_value(
                 INVALID_CONTAINS_ELEMENT,
                 name,
                 self,
@@ -460,9 +459,9 @@ where
     ) -> Validation<MustMatch, Self> {
         let RelatedFields(name1, name2) = fields.into();
         if self.0 == self.1 {
-            Validation::Success(PhantomData, self)
+            Validation::success(self)
         } else {
-            Validation::Failure(vec![invalid_relation(
+            Validation::failure(vec![invalid_relation(
                 INVALID_MUST_MATCH,
                 name1,
                 self.0,
@@ -497,9 +496,9 @@ where
         match *constraint {
             FromTo::Inclusive => {
                 if self.0 <= self.1 {
-                    Validation::Success(PhantomData, self)
+                    Validation::success(self)
                 } else {
-                    Validation::Failure(vec![invalid_relation(
+                    Validation::failure(vec![invalid_relation(
                         INVALID_FROM_TO_INCLUSIVE,
                         name1,
                         self.0,
@@ -510,9 +509,9 @@ where
             }
             FromTo::Exclusive => {
                 if self.0 < self.1 {
-                    Validation::Success(PhantomData, self)
+                    Validation::success(self)
                 } else {
-                    Validation::Failure(vec![invalid_relation(
+                    Validation::failure(vec![invalid_relation(
                         INVALID_FROM_TO_EXCLUSIVE,
                         name1,
                         self.0,
