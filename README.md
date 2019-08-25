@@ -1,5 +1,26 @@
 # valid - composable validation functions for custom types
 
+[![Crates.io][crb]][crl]
+[![Docs.rs][dcb]][dcl]
+[![MIT/Apache][lib]][lil]
+
+[crb]: https://img.shields.io/crates/v/valid.svg
+[dcb]: https://docs.rs/valid/badge.svg
+[tcb]: https://travis-ci.org/innoave/valid.svg?branch=master
+[avb]: https://ci.appveyor.com/api/projects/status/github/innoave/valid?branch=master&svg=true
+[cvb]: https://codecov.io/gh/innoave/valid/branch/master/graph/badge.svg
+[lib]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
+[l1b]: https://img.shields.io/badge/license-MIT-blue.svg
+[l2b]: https://img.shields.io/badge/license-Apache-blue.svg
+
+[crl]: https://crates.io/crates/valid/
+[dcl]: https://docs.rs/valid
+[tcl]: https://travis-ci.org/innoave/valid/
+[avl]: https://ci.appveyor.com/project/innoave/valid
+[cvl]: https://codecov.io/github/innoave/valid?branch=master
+[l1l]: https://opensource.org/licenses/MIT
+[l2l]: https://www.apache.org/licenses/LICENSE-2.0
+
 `valid` is a validation library for the [Rust] language. It let us write validation functions for
 our custom types through composition of available validators. Any custom written validation function
 again can be used to build validations for even more complex types.

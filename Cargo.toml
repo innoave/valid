@@ -6,13 +6,16 @@ license = "MIT/Apache-2.0"
 
 description = "Validate custom types by composing primitive validator functions"
 
+categories = ["value-formatting"]
+keywords = ["validate", "user-input", "business-rules", "constraints", "validation"]
+documentation = "https://docs.rs/valid"
+repository = "https://github.com/innoave/valid"
+readme = "README.md"
+
 edition = "2018"
 
-[package.metadata.docs.rs]
-all-features = true
-
 [badges]
-maintenance = { status = "experimental" }
+maintenance = { status = "actively-developed" }
 
 [features]
 default = []
@@ -27,3 +30,6 @@ serde = { version = "1", optional = true, features = ["derive"] }
 failure = "0.1"
 proptest = "0.9"
 version-sync = "0.8"
+
+[package.metadata.docs.rs]
+all-features = true
