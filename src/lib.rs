@@ -5,6 +5,7 @@
 //! validation function again can be used to build validations for even more
 //! complex types.
 //!
+//!
 //! # Validation function, constraints and context
 //!
 //! The goal of the validation is to confirm that a given value of type `T` is
@@ -131,6 +132,7 @@
 //! assert_eq!(validated.unwrap(), ("s3cr3t".to_string(), "s3cr3t".to_string()));
 //! ```
 //!
+//!
 //! # Validation errors
 //!
 //! A failing validation returs a `ValidationError`. It contains a list of
@@ -182,6 +184,7 @@
 //! implements `Serialize` and `Deserialize` from the `serde` crate. This
 //! enables us to send errors to the client of an application via the network
 //! or store them in a database.
+//!
 //!
 //! # Composite validation functions
 //!
@@ -323,8 +326,120 @@
 //!
 //! # Custom constraints
 //!
+//! To implement a custom constraint we first define a struct that represents
+//! the constraint. The constraint usually holds parameters of the constraint
+//! such as allowed limits. Then we implement the `Validate` trait for the
+//! combination of our new constraint and any type that should be validated for
+//! this constraint.
 //!
+//! Lets say we have an enum that represents the days of a week.
 //!
+//! ```
+//! #[derive(Debug, PartialEq)]
+//! enum Weekday {
+//!     Monday,
+//!     Tuesday,
+//!     Wednesday,
+//!     Thursday,
+//!     Friday,
+//!     Saturday,
+//!     Sunday,
+//! }
+//! ```
+//!
+//! For some usage in our application only workdays are allowed. But it depends
+//! on some configuration parameter whether saturday is considered a workday or
+//! not. So we define the enum `Workday` with two variants to represent our
+//! constraint.
+//!
+//! ```
+//! enum Workday {
+//!     InclSaturday,
+//!     ExclSaturday,
+//! }
+//! ```
+//!
+//! To be able to validate whether of value of type `Weekday` is compliant to
+//! our `Workday` constraint we implement the `Validate` trait for the
+//! `Weekday` trait.
+//!
+//! ```
+//! # #[derive(Debug, PartialEq)]
+//! # enum Weekday {
+//! #     Monday,
+//! #     Tuesday,
+//! #     Wednesday,
+//! #     Thursday,
+//! #     Friday,
+//! #     Saturday,
+//! #     Sunday,
+//! # }
+//! # enum Workday {
+//! #     InclSaturday,
+//! #     ExclSaturday,
+//! # }
+//! use valid::{Validate, FieldName, Validation, invalid_value};
+//!
+//! impl Validate<Workday, FieldName> for Weekday {
+//!     fn validate(self, name: impl Into<FieldName>, constraint: &Workday) -> Validation<Workday, Self> {
+//!         match (&self, constraint) {
+//!             (Weekday::Sunday, _) => Validation::failure(vec![
+//!                 invalid_value("invalid.workday.incl.saturday", name, "sunday".to_string(), "monday - friday".to_string())
+//!             ]),
+//!             (Weekday::Saturday, Workday::ExclSaturday) => Validation::failure(vec![
+//!                 invalid_value("invalid.workday.excl.saturday", name, "saturday".to_string(), "monday - friday".to_string())
+//!             ]),
+//!             (_, _) => Validation::success(self),
+//!         }
+//!     }
+//! }
+//! ```
+//!
+//! Now we can validate some values for being workdays.
+//!
+//! ```
+//! # #[derive(Debug, PartialEq)]
+//! # enum Weekday {
+//! #     Monday,
+//! #     Tuesday,
+//! #     Wednesday,
+//! #     Thursday,
+//! #     Friday,
+//! #     Saturday,
+//! #     Sunday,
+//! # }
+//! # enum Workday {
+//! #     InclSaturday,
+//! #     ExclSaturday,
+//! # }
+//! # use valid::{Validate, FieldName, Validation, invalid_value};
+//! #
+//! # impl Validate<Workday, FieldName> for Weekday {
+//! #     fn validate(self, name: impl Into<FieldName>, constraint: &Workday) -> Validation<Workday, Self> {
+//! #         match (&self, constraint) {
+//! #             (Weekday::Sunday, _) => Validation::failure(vec![
+//! #                 invalid_value("invalid.workday.incl.saturday", name, "sunday".to_string(), "monday - friday".to_string())
+//! #             ]),
+//! #             (Weekday::Saturday, Workday::ExclSaturday) => Validation::failure(vec![
+//! #                 invalid_value("invalid.workday.excl.saturday", name, "saturday".to_string(), "monday - friday".to_string())
+//! #             ]),
+//! #             (_, _) => Validation::success(self),
+//! #         }
+//! #     }
+//! # }
+//! let validated = Weekday::Monday.validate("day of release", &Workday::ExclSaturday).result()
+//!     .expect("a valid workday");
+//!
+//! assert_eq!(validated.unwrap(), Weekday::Monday);
+//!
+//! let result = Weekday::Saturday.validate("day of release", &Workday::ExclSaturday).result();
+//!
+//! assert!(result.is_err());
+//!
+//! let result = Weekday::Saturday.validate("day of release", &Workday::InclSaturday).result();
+//!
+//! assert!(result.is_ok());
+//! ```
 //!
 
 #![doc(html_root_url = "https://docs.rs/valid/0.1.0")]
