@@ -148,10 +148,10 @@
 //! # Validation errors
 //!
 //! A failing validation returs a `ValidationError`. It contains a list of
-//! constraint violations and and an optional message. The message is ment to
+//! constraint violations and and an optional message. The message is meant to
 //! describe the context in which the validation has been performed. It is
 //! helpful when validating a struct that represents an input form or a REST
-//! command. In such a case the message would be something like "validating
+//! command. In such cases the message would be something like "validating
 //! registration form" or "invalid post entry command".
 //!
 //! The optional message is added by using the `with_message` function to finish
@@ -573,7 +573,6 @@
 #[cfg(feature = "bigdecimal")]
 mod bigdecimal;
 pub mod constraint;
-#[allow(missing_docs)]
 mod core;
 pub mod property;
 mod std_types;

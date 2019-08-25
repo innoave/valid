@@ -156,8 +156,13 @@ mod private {
     impl<T> Sealed for T where T: super::Context {}
 }
 
+/// Trait to mark structs as context for validation functions.
+///
+/// This trait is sealed an can not be implemented for types outside this crate.
 pub trait Context: private::Sealed {}
 
+/// Represents the field level context for validation functions. Its value is
+/// the name of the field to be validated.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FieldName(pub Cow<'static, str>);
 
@@ -181,11 +186,14 @@ impl Deref for FieldName {
 }
 
 impl FieldName {
+    /// Unwraps this field name context and returns the field name itself
     pub fn unwrap(self) -> Cow<'static, str> {
         self.0
     }
 }
 
+/// Represents a pair of related fields as context for validation functions.
+/// It holds the names of the two related fields that are validated.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RelatedFields(pub Cow<'static, str>, pub Cow<'static, str>);
 
@@ -202,19 +210,24 @@ where
 }
 
 impl RelatedFields {
+    /// Unwraps this related fields context and returns the 2 field names
     pub fn unwrap(self) -> (Cow<'static, str>, Cow<'static, str>) {
         (self.0, self.1)
     }
 
+    /// Returns a reference to the name of the first field
     pub fn first(&self) -> &str {
         &self.0
     }
 
+    /// Returns a reference to the name of the second field
     pub fn second(&self) -> &str {
         &self.1
     }
 }
 
+/// Represents the state context for validation functions. Its value is the
+/// state information needed to execute the validation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct State<S>(pub S);
 
@@ -235,6 +248,7 @@ impl<S> Deref for State<S> {
 }
 
 impl<S> State<S> {
+    /// Unwraps this state context and returns the state information itself
     pub fn unwrap(self) -> S {
         self.0
     }
@@ -245,6 +259,20 @@ enum InnerValidation<C, T> {
     Failure(Vec<ConstraintViolation>),
 }
 
+/// State of an ongoing validation.
+///
+/// It provides combinator methods like [`and`] and [`and_then`] to combine
+/// validation steps to complex validations and accumulates all constraint
+/// violations found by the executed validations.
+///
+/// The result of a validation can be obtained by calling the [`result`] method.
+///
+/// see the crate level documentation for details and examples on how to use
+/// the methods provided by this struct.
+///
+/// [`and`]: #method.and
+/// [`and_then`]: #method.and_then
+/// [`result`]: #method.result
 pub struct Validation<C, T>(InnerValidation<C, T>);
 
 impl<C, T> Debug for Validation<C, T>
@@ -265,16 +293,31 @@ where
 }
 
 impl<C, T> Validation<C, T> {
+    /// Constructs a `Validation` for a successful validation step.
+    ///
+    /// This method is provided to enable users of this crate to implement
+    /// custom validation function.
     pub fn success(valid: T) -> Self {
         Validation(InnerValidation::Success(PhantomData, valid))
     }
 
+    /// Constructs a `Validation` for a failed validation step.
+    ///
+    /// This method is provided to enable users of this crate to implement
+    /// custom validation function.
     pub fn failure(constraint_violations: impl IntoIterator<Item = ConstraintViolation>) -> Self {
         Validation(InnerValidation::Failure(Vec::from_iter(
             constraint_violations.into_iter(),
         )))
     }
 
+    /// Finishes a validation and returns the result of the validation.
+    ///
+    /// A validation may comprise multiple validation steps that are combined
+    /// using the combinator methods of this struct. After all steps are
+    /// executed this method can be called to get the [`ValidationResult`]
+    ///
+    /// [`ValidationResult`]: type.ValidationResult.html
     pub fn result(self) -> ValidationResult<C, T> {
         match self.0 {
             InnerValidation::Success(_c, entity) => Ok(Validated(_c, entity)),
@@ -285,6 +328,21 @@ impl<C, T> Validation<C, T> {
         }
     }
 
+    /// Finishes a validation providing a message and returns the result.
+    ///
+    /// A validation may comprise multiple validation steps that are combined
+    /// using the combinator methods of this struct. After all steps are
+    /// executed this method can be called to get the [`ValidationResult`]
+    ///
+    /// In case of an error the [`ValidationError`] will contain the given
+    /// message. It is meant to describe the context in which the validation has
+    /// been executed. E.g when validating a struct that represents an input
+    /// form the message would be something like "validating registration form"
+    /// or when validating a struct that represents a REST command the message
+    /// would be something like "invalid post entry command".
+    ///
+    /// [`ValidationResult`]: type.ValidationResult.html
+    /// [`ValidationError`]: struct.ValidationError.html
     pub fn with_message(self, message: impl Into<Cow<'static, str>>) -> ValidationResult<C, T> {
         match self.0 {
             InnerValidation::Success(_c, entity) => Ok(Validated(_c, entity)),
@@ -295,6 +353,14 @@ impl<C, T> Validation<C, T> {
         }
     }
 
+    /// Combines a value that needs no further validation with the validation
+    /// result.
+    ///
+    /// This method may be especially useful in combination with the
+    /// [`and_then`] combinator method. See the crate level documentation for
+    /// an example.
+    ///
+    /// [`and_then`]: #method.and_then
     pub fn combine<U>(self, value: U) -> Validation<C, (U, T)> {
         match self.0 {
             InnerValidation::Success(_, entity) => Validation::success((value, entity)),
@@ -302,6 +368,11 @@ impl<C, T> Validation<C, T> {
         }
     }
 
+    /// Maps the validated values into another type.
+    ///
+    /// This method is used for complex validations that validate multiple
+    /// fields of a struct and the result should be mapped back into this
+    /// struct. See the crate level documentation for an example.
     pub fn map<D, U>(self, convert: impl Fn(T) -> U) -> Validation<D, U> {
         match self.0 {
             InnerValidation::Success(_, entity) => Validation::success(convert(entity)),
@@ -309,6 +380,16 @@ impl<C, T> Validation<C, T> {
         }
     }
 
+    /// Combines this validation with another validation unconditionally.
+    ///
+    /// The other validation is executed regardless whether this validation has
+    /// been successful or not.
+    ///
+    /// The resulting validation is only successful if itself was successful
+    /// and the other validation is also successful. Any constraint violations
+    /// found either by this validation or the other validation are accumulated.
+    ///
+    /// See the crate level documentation for an example.
     pub fn and<D, U>(self, other: Validation<D, U>) -> Validation<D, (T, U)> {
         match (self.0, other.0) {
             (InnerValidation::Success(_, value1), InnerValidation::Success(_, value2)) => {
@@ -327,6 +408,12 @@ impl<C, T> Validation<C, T> {
         }
     }
 
+    /// Combines this validation with another validation conditionally.
+    ///
+    /// The other validation is only executed if this validation has been
+    /// successful.
+    ///
+    /// See the crate level documentation for an example.
     pub fn and_then<D, U>(self, next: impl FnOnce(T) -> Validation<D, U>) -> Validation<D, U> {
         match self.0 {
             InnerValidation::Success(_, value1) => next(value1),
@@ -335,19 +422,57 @@ impl<C, T> Validation<C, T> {
     }
 }
 
+/// A `Value` represents a value of certain type.
+///
+/// It has variants for the basic types that or mostly used in applications.
+///
+/// Important types of 3rd party crates are supported through optional crate
+/// features:
+///
+/// | 3rd party crate | supported type  | crate feature |
+/// |-----------------|-----------------|---------------|
+/// | `bigdecimal`    | `BigDecimal`    | `bigdecimal`  |
+/// | `chrono`        | `NaiveDate`     | `chrono`      |
+/// | `chrono`        | `DateTime<Utc>` | `chrono`      |
+///
+/// The `From` trait is implemented for the underlying types. Additionally
+/// there are implementations of the `From` trait for the primitive types `i8`,
+/// `i16`, `i64`, `u8`, `u16`, `u32`, `u64`.
+///
+/// `u32` values greater than `i32::max_value()` are converted to `Long(i64)`.
+///
+/// # Panics
+///
+/// Converting `u64` values greater than `i64::max_value()` has an unreliable
+/// behavior and might panic.
+///
+/// # Notes
+///
+/// The list of supported types is very opinionated and may not fit all kind of
+/// applications. Please file and issue if you feel that support for another
+/// type may be useful!
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
+    /// a string value
     String(String),
+    /// a 32bit signed integer value
     Integer(i32),
+    /// a 64bit signed integer value
     Long(i64),
+    /// a 32bit float value
     Float(f32),
+    /// a 64bit float value
     Double(f64),
+    /// a boolean value
     Boolean(bool),
+    /// a decimal value
     #[cfg(feature = "bigdecimal")]
     Decimal(BigDecimal),
+    /// a date value
     #[cfg(feature = "chrono")]
     Date(NaiveDate),
+    /// a value with date, time and timezone
     #[cfg(feature = "chrono")]
     DateTime(DateTime<Utc>),
 }
@@ -423,29 +548,14 @@ impl From<i64> for Value {
     }
 }
 
+//TODO unreliable conversion - should be removed!
 impl From<u64> for Value {
     fn from(value: u64) -> Self {
+        assert!(
+            value <= i64::max_value() as u64,
+            "u64 value to big to be converted to i64"
+        );
         Value::Long(value as i64)
-    }
-}
-
-impl From<isize> for Value {
-    fn from(value: isize) -> Self {
-        if value > i32::max_value() as isize {
-            Value::Long(value as i64)
-        } else {
-            Value::Integer(value as i32)
-        }
-    }
-}
-
-impl From<usize> for Value {
-    fn from(value: usize) -> Self {
-        if value > i32::max_value() as usize {
-            Value::Long(value as i64)
-        } else {
-            Value::Integer(value as i32)
-        }
     }
 }
 
@@ -488,26 +598,6 @@ impl From<DateTime<Utc>> for Value {
     }
 }
 
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
-#[derive(Debug, Clone, PartialEq)]
-pub struct Field {
-    pub name: Cow<'static, str>,
-    pub actual: Option<Value>,
-    pub expected: Option<Value>,
-}
-
-impl Display for Field {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "field: {}, actual: {}, expected: {}",
-            self.name,
-            option_to_string(self.actual.as_ref()),
-            option_to_string(self.expected.as_ref())
-        )
-    }
-}
-
 fn option_to_string<T: Display>(optional_value: Option<&T>) -> String {
     match optional_value {
         Some(value) => value.to_string(),
@@ -533,10 +623,48 @@ fn array_to_string<T: Display>(array: &[T]) -> String {
     }
 }
 
+/// Details about a field.
+///
+/// This struct is used to provide more details in [`ConstraintViolation`]s.
+///
+/// [`ConstraintViolation`]: enum.ConstraintViolation.html
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
+pub struct Field {
+    /// The name of the field
+    pub name: Cow<'static, str>,
+
+    /// The actual value of the field
+    pub actual: Option<Value>,
+
+    /// An example for an expected value
+    pub expected: Option<Value>,
+}
+
+impl Display for Field {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "field: {}, actual: {}, expected: {}",
+            self.name,
+            option_to_string(self.actual.as_ref()),
+            option_to_string(self.expected.as_ref())
+        )
+    }
+}
+
+/// Holds details about a constraint violation found by validating a constraint
+/// in the `FieldName` context.
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct InvalidValue {
+    /// Error code that identifies the exact error.
+    ///
+    /// A client that receives the constraint violation should be able to
+    /// interpret this error code.
     pub code: Cow<'static, str>,
+
+    /// Details about the field having a value that violates a constraint.
     pub field: Field,
 }
 
@@ -553,11 +681,21 @@ impl Display for InvalidValue {
     }
 }
 
+/// Holds details about a constraint violation found by validating a constraint
+/// in the `RelatedFields` context.
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct InvalidRelation {
+    /// Error code that identifies the exact error.
+    ///
+    /// A client that receives the constraint violation should be able to
+    /// interpret this error code.
     pub code: Cow<'static, str>,
+
+    /// Details about the first of the pair of related fields
     pub field1: Field,
+
+    /// Details about the second of the pair of related fields
     pub field2: Field,
 }
 
@@ -575,10 +713,19 @@ impl Display for InvalidRelation {
     }
 }
 
+/// Holds details about a constraint violation found by validating a constraint
+/// in the `State` context.
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct InvalidState {
+    /// Error code that identifies the exact error.
+    ///
+    /// A client that receives the constraint violation should be able to
+    /// interpret this error code.
     pub code: Cow<'static, str>,
+
+    /// A list of parameters that may be used to provide more meaningful error
+    /// messages to the user of an application
     pub params: Vec<Field>,
 }
 
@@ -593,11 +740,52 @@ impl Display for InvalidState {
     }
 }
 
+/// Represents a constraint violation found by some validation function.
+///
+/// The variants provide different details about a constraint violation. As
+/// described in the crate level documentation this crate considers 3 categories
+/// of business rules or constraints. Violations of constraints of the different
+/// categories might provide different details about the validation.
+///
+/// For example a field validation might provide the field name, the actual value
+/// and an example for the expected value. A constraint on the relation of a
+/// pair of fields might provide the names of the 2 fields. Stateful constraints
+/// may provide a list of parameters that might be useful to describe the
+/// reason of the constraint violation.
+///
+/// An implementation of a constraint should choose the most appropriate
+/// context for the kind of business rule it is implementing. Here is a table
+/// that shows the relation of the implemented context and the variant of the
+/// constraint violation type.
+///
+/// | Context            | Constraint Violation | Construction Method      |
+/// |--------------------|----------------------|--------------------------|
+/// | [`FieldName`]      | `Field`              | [`invalid_value`]<br/>[`invalid_optional_value`] |
+/// | [`RelatedFields`]  | `Relation`           | [`invalid_relation`]     |
+/// | [`State<S>`]       | `State`              | [`invalid_state`]        |
+///
+/// The construction methods are a convenient way to construct
+/// `ConstraintViolation`s.
+///
+/// `ConstraintViolation` can be serialized and deserialized using the `serde`
+/// crate. To use the `serde` support the optional crate feature "serde1" must
+/// be enabled.
+///
+/// [`FieldName`]: struct.FieldName.html
+/// [`RelatedFields`]: struct.RelatedFields.html
+/// [`State<S>`]: struct.State.html
+/// [`invalid_value`]: fn.invalid_value.html
+/// [`invalid_optional_value`]: fn.invalid_optional_value.html
+/// [`invalid_relation`]: fn.invalid_relation.html
+/// [`invalid_state`]: fn.invalid_state.html
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConstraintViolation {
+    /// Violation of a constraint validated in the `FieldName` context
     Field(InvalidValue),
+    /// Violation of a constraint validated in the `RelatedField` context
     Relation(InvalidRelation),
+    /// Violation of a constraint validated in the `State` context
     State(InvalidState),
 }
 
@@ -629,10 +817,28 @@ impl From<InvalidState> for ConstraintViolation {
     }
 }
 
+/// The error type returned if the validation finds any constraint violation.
+///
+/// It holds a list of constraint violations and an optional message. The
+/// message is meant to describe the context in which the validation has been
+/// performed. It is helpful when validating a struct that represents an input
+/// form or a REST command. In such cases the message would be something like
+/// "validating registration form" or "invalid post entry command".
+///
+/// The `Display` and `Error` traits are implemented to be compatible with most
+/// error management concepts. It can be converted into `failure::Error` using
+/// `From` or `Into` conversion traits.
+///
+/// It can be serialized and deserialized using the `serde` crate. To enable
+/// `serde` support the optional crate feature "serde1" must be enabled.
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ValidationError {
+    /// Message that describes the context in which the validation has been
+    /// executed
     pub message: Option<Cow<'static, str>>,
+
+    /// A list of constraint violations found during validation
     pub violations: Vec<ConstraintViolation>,
 }
 
@@ -666,6 +872,15 @@ impl ValidationError {
 /// Type alias for the validation result for shorter type annotations.
 pub type ValidationResult<C, T> = Result<Validated<C, T>, ValidationError>;
 
+/// Convenience method to construct a [`ConstraintViolation`] for a validation
+/// performed in the [`FieldName`] context.
+///
+/// Use this method if the field value is mandatory. If the field is of type
+/// `Option<T>` consider using the [`invalid_optional_value`] method instead.
+///
+/// [`ConstraintViolation`]: enum.ConstraintViolation.html
+/// [`FieldName`]: struct.FieldName.html
+/// [`invalid_optional_value`]: fn.invalid_optional_value.html
 pub fn invalid_value(
     code: impl Into<Cow<'static, str>>,
     field_name: impl Into<FieldName>,
@@ -682,6 +897,15 @@ pub fn invalid_value(
     })
 }
 
+/// Convenience method to construct a [`ConstraintViolation`] for a validation
+/// performed in the [`FieldName`] context.
+///
+/// Use this method if the field value is optional. If the field is not of type
+/// `Option<T>` consider using the [`invalid_value`] method instead.
+///
+/// [`ConstraintViolation`]: enum.ConstraintViolation.html
+/// [`FieldName`]: struct.FieldName.html
+/// [`invalid_value`]: fn.invalid_value.html
 pub fn invalid_optional_value(
     code: impl Into<Cow<'static, str>>,
     field_name: impl Into<FieldName>,
@@ -698,6 +922,11 @@ pub fn invalid_optional_value(
     })
 }
 
+/// Convenience method to construct a [`ConstraintViolation`] for a validation
+/// performed in the [`RelatedFields`] context.
+///
+/// [`ConstraintViolation`]: enum.ConstraintViolation.html
+/// [`RelatedFields`]: struct.RelatedFields.html
 pub fn invalid_relation(
     code: impl Into<Cow<'static, str>>,
     field_name1: impl Into<Cow<'static, str>>,
@@ -720,6 +949,11 @@ pub fn invalid_relation(
     })
 }
 
+/// Convenience method to construct a [`ConstraintViolation`] for a validation
+/// performed in the [`State`] context.
+///
+/// [`ConstraintViolation`]: enum.ConstraintViolation.html
+/// [`State`]: struct.State.html
 pub fn invalid_state(
     code: impl Into<Cow<'static, str>>,
     params: impl IntoIterator<Item = Field>,
