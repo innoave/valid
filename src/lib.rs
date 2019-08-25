@@ -178,9 +178,147 @@
 //! from std-lib. It also can be converted into a `failure::Error` from the
 //! `failure` crate.
 //!
+//! With the optional crate feature "serde1" enabled the `ValidationError`
+//! implements `Serialize` and `Deserialize` from the `serde` crate. This
+//! enables us to send errors to the client of an application via the network
+//! or store them in a database.
+//!
 //! # Composite validation functions
 //!
+//! Validating a struct with severals fields typically means to validate each
+//! field and list all the violations if any are found. With `valid` we can
+//! combine validations using the combinator methods, e.g. `Validation::and` and
+//! `Validation::and_then`.
 //!
+//! Lets say we have a struct that represents a command to register a new user.
+//!
+//! ```
+//! #[derive(Debug, Clone, PartialEq)]
+//! struct RegisterUser {
+//!     username: String,
+//!     password: String,
+//!     password2: String,
+//!     age: i32,
+//! }
+//! ```
+//!
+//! Now we write a function that validates our struct and validate some instance
+//! of the command:
+//!
+//! ```
+//! # #[derive(Debug, Clone, PartialEq)]
+//! # struct RegisterUser {
+//! #     username: String,
+//! #     password: String,
+//! #     password2: String,
+//! #     age: i32,
+//! # }
+//! use valid::{State, Validate, Validation, ValidationResult};
+//! use valid::constraint::{Bound, CharCount, MustMatch};
+//!
+//! fn validate_register_user_cmd(command: RegisterUser) -> ValidationResult<(), RegisterUser> {
+//!     let RegisterUser {
+//!         username,
+//!         password,
+//!         password2,
+//!         age,
+//!     } = command;
+//!
+//!     username
+//!         .validate("name", &CharCount::MinMax(4, 20))
+//!         .and(password.validate("password", &CharCount::MinMax(6, 20)))
+//!         .and_then(|(username, password)| {
+//!             (password, password2)
+//!                 .validate(("password", "password2"), &MustMatch)
+//!                 .combine(username)
+//!         })
+//!         .and(age.validate("age", &Bound::ClosedRange(13, 199)))
+//!         .map(|((username, (password, password2)), age)| RegisterUser {
+//!             username,
+//!             password,
+//!             password2,
+//!             age,
+//!         })
+//!         .with_message("validating register user command")
+//! }
+//!
+//! let register_user = RegisterUser {
+//!     username: "jane.doe".into(),
+//!     password: "s3cr3t".into(),
+//!     password2: "s3cr3t".into(),
+//!     age: 42,
+//! };
+//! let original = register_user.clone();
+//!
+//! let result = validate_register_user_cmd(register_user);
+//! let validated = result.unwrap();
+//!
+//! assert_eq!(validated.unwrap(), original);
+//! ```
+//!
+//! Alternatively we can implement the `Validate` trait and do the same
+//! validation:
+//!
+//! ```
+//! # #[derive(Debug, Clone, PartialEq)]
+//! # struct RegisterUser {
+//! #     username: String,
+//! #     password: String,
+//! #     password2: String,
+//! #     age: i32,
+//! # }
+//! use valid::{State, Validate, Validation};
+//! use valid::constraint::{Bound, CharCount, MustMatch};
+//!
+//! struct RegistrationForm;
+//!
+//! impl Validate<RegistrationForm, State<()>> for RegisterUser {
+//!     fn validate(self, context: impl Into<State<()>>, constraint: &RegistrationForm) -> Validation<RegistrationForm, Self> {
+//!         let RegisterUser {
+//!             username,
+//!             password,
+//!             password2,
+//!             age,
+//!         } = self;
+//!
+//!         username
+//!             .validate("name", &CharCount::MinMax(4, 20))
+//!             .and(password.validate("password", &CharCount::MinMax(6, 20)))
+//!             .and_then(|(username, password)| {
+//!                 (password, password2)
+//!                     .validate(("password", "password2"), &MustMatch)
+//!                     .combine(username)
+//!             })
+//!             .and(age.validate("age", &Bound::ClosedRange(13, 199)))
+//!             .map(|((username, (password, password2)), age)| RegisterUser {
+//!                 username,
+//!                 password,
+//!                 password2,
+//!                 age,
+//!             })
+//!     }
+//! }
+//!
+//! let register_user = RegisterUser {
+//!     username: "jane.doe".into(),
+//!     password: "s3cr3t".into(),
+//!     password2: "s3cr3t".into(),
+//!     age: 42,
+//! };
+//! let original = register_user.clone();
+//!
+//! let result = register_user
+//!     .validate((), &RegistrationForm)
+//!     .with_message("validating register user command");
+//!
+//! let validated = result.unwrap();
+//!
+//! assert_eq!(validated.unwrap(), original);
+//! ```
+//!
+//! In terms of boilerplate code there is not much difference to the plain
+//! function in the previous example. The code that actually does the validation
+//! is exactly the same.
 //!
 //!
 //! # Custom constraints
@@ -217,5 +355,5 @@ mod std_types;
 pub use crate::core::{
     invalid_optional_value, invalid_relation, invalid_state, invalid_value, ConstraintViolation,
     Field, FieldName, InvalidRelation, InvalidState, InvalidValue, RelatedFields, State, Validate,
-    Validated, Validation, ValidationError, Value,
+    Validated, Validation, ValidationError, ValidationResult, Value,
 };

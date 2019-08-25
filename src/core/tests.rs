@@ -81,7 +81,7 @@ mod validation {
     #[test]
     fn unfortunately_we_can_construct_an_instance_of_validated_without_doing_any_validation() {
         //TODO find a way to prevent this from compiling and still support the
-        //     the possibility for custom implementations of the `Validate` trait
+        //     possibility for custom implementations of the `Validate` trait
 
         let value: Validated<Bound<i32>, i32> = Validation::success(42).result().unwrap();
 

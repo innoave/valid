@@ -105,7 +105,7 @@ use std::ops::Deref;
 ///
 /// [^1]: Actually there is a way to construct an instance of `Validated`
 ///       without actually doing any validation: we can use the
-///       `Validation::success` (see unit tests on how it can be done)
+///       `Validation::success` method (see unit tests on how it can be done)
 ///       We need this method for custom implementations of the `Validate`
 ///       trait. Unfortunately I have no idea how to prevent this.
 ///       Fortunately such code can be found by (automated) code review.
@@ -113,6 +113,7 @@ use std::ops::Deref;
 pub struct Validated<C, T>(PhantomData<C>, T);
 
 impl<C, T> Validated<C, T> {
+    /// Unwraps the original value that has been validated
     pub fn unwrap(self) -> T {
         self.1
     }
@@ -251,9 +252,9 @@ impl<C, T> Deref for Validated<C, T> {
 ///
 /// assert!(result.is_err());
 ///
-/// let result = Weekday::Sunday.validate("day of release", &Workday::InclSaturday).result();
+/// let result = Weekday::Saturday.validate("day of release", &Workday::InclSaturday).result();
 ///
-/// assert!(result.is_err());
+/// assert!(result.is_ok());
 /// ```
 ///
 /// see the documentation of the
@@ -384,11 +385,7 @@ where
 }
 
 impl<C, T> Validation<C, T> {
-    pub fn success<S>(valid: T) -> Self
-    where
-        S: Context,
-        T: Validate<C, S>,
-    {
+    pub fn success(valid: T) -> Self {
         Validation(InnerValidation::Success(PhantomData, valid))
     }
 
@@ -398,7 +395,7 @@ impl<C, T> Validation<C, T> {
         )))
     }
 
-    pub fn result(self) -> Result<Validated<C, T>, ValidationError> {
+    pub fn result(self) -> ValidationResult<C, T> {
         match self.0 {
             InnerValidation::Success(_c, entity) => Ok(Validated(_c, entity)),
             InnerValidation::Failure(violations) => Err(ValidationError {
@@ -408,10 +405,7 @@ impl<C, T> Validation<C, T> {
         }
     }
 
-    pub fn with_message(
-        self,
-        message: impl Into<Cow<'static, str>>,
-    ) -> Result<Validated<C, T>, ValidationError> {
+    pub fn with_message(self, message: impl Into<Cow<'static, str>>) -> ValidationResult<C, T> {
         match self.0 {
             InnerValidation::Success(_c, entity) => Ok(Validated(_c, entity)),
             InnerValidation::Failure(violations) => Err(ValidationError {
@@ -421,15 +415,24 @@ impl<C, T> Validation<C, T> {
         }
     }
 
-    pub fn and<D, S, U>(self, context: impl Into<S>, constraint: &D, entity: U) -> Validation<D, ()>
-    where
-        S: Context,
-        U: Validate<D, S>,
-    {
-        let other = entity.validate(context, constraint);
+    pub fn combine<U>(self, value: U) -> Validation<C, (U, T)> {
+        match self.0 {
+            InnerValidation::Success(_, entity) => Validation::success((value, entity)),
+            InnerValidation::Failure(violations) => Validation::failure(violations),
+        }
+    }
+
+    pub fn map<D, U>(self, convert: impl Fn(T) -> U) -> Validation<D, U> {
+        match self.0 {
+            InnerValidation::Success(_, entity) => Validation::success(convert(entity)),
+            InnerValidation::Failure(violations) => Validation::failure(violations),
+        }
+    }
+
+    pub fn and<D, U>(self, other: Validation<D, U>) -> Validation<D, (T, U)> {
         match (self.0, other.0) {
-            (InnerValidation::Success(_, _), InnerValidation::Success(_, _)) => {
-                Validation::success::<S>(())
+            (InnerValidation::Success(_, value1), InnerValidation::Success(_, value2)) => {
+                Validation::success((value1, value2))
             }
             (InnerValidation::Failure(violations), InnerValidation::Success(_, _)) => {
                 Validation::failure(violations)
@@ -444,31 +447,18 @@ impl<C, T> Validation<C, T> {
         }
     }
 
-    pub fn and_then<D, S, U>(
-        self,
-        context: impl Into<S>,
-        constraint: &D,
-        entity: U,
-    ) -> Validation<D, U>
-    where
-        S: Context,
-        U: Validate<D, S>,
-    {
+    pub fn and_then<D, U>(self, next: impl FnOnce(T) -> Validation<D, U>) -> Validation<D, U> {
         match self.0 {
-            InnerValidation::Success(_, _) => entity.validate(context, constraint),
+            InnerValidation::Success(_, value1) => next(value1),
             InnerValidation::Failure(error) => Validation::failure(error),
         }
     }
 }
 
-impl<C, S> Validate<C, S> for ()
-where
-    S: Context,
-{
-    fn validate(self, _context: impl Into<S>, _constraint: &C) -> Validation<C, Self> {
-        Validation::success::<S>(())
-    }
-}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Combined;
+
+impl Context for Combined {}
 
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
@@ -783,6 +773,9 @@ impl Display for ValidationError {
 impl Error for ValidationError {}
 
 impl ValidationError {
+    /// Merges this validation error with another validation error and returns
+    /// a new validation error that contains all constraint violations from
+    /// both errors merged into one list.
     pub fn merge(mut self, other: ValidationError) -> Self {
         //TODO find a more reasonable solution for merging messages
         self.message = match (self.message, other.message) {
@@ -794,6 +787,8 @@ impl ValidationError {
         self
     }
 }
+
+pub type ValidationResult<C, T> = Result<Validated<C, T>, ValidationError>;
 
 pub fn invalid_value(
     code: impl Into<Cow<'static, str>>,
