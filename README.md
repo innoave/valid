@@ -5,20 +5,38 @@ our custom types through composition of available validators. Any custom written
 again can be used to build validations for even more complex types.
 
 The `valid` crate defines the types and traits to implement validation functions and use them to
-validate our values. Additionally it provides definitions of basic constraints with implementations
-of the validation function for all primitive types and for some types of the std-lib. 
+validate our values. Additionally it defines primitive constraints.
+ 
+Most primitive constraints validate one property of the validated type. E.g. the `Length` constraint
+validates the length property of strings, container types or slices. If the constraint property is
+not covered by a trait of the std-lib, a related trait is defined, which we call a _property trait_. 
 
-The goal for the core functionality of this crate is to have no dependencies other than the std-lib.
-Support for types of other crates such as [`bigdecimal`] and [`chrono`] are implemented as optional
-crate features. So you can pick and choose which types you need in your application and which
-dependencies you will have in your project.
+The builtin constraints are implemented for generic types `T` that implement the related property
+trait.
+
+One goal of `valid` is to provide one API that can be used to validate all kind of business rules.
+Constraints are grouped into one of 3 categories:
+ 
+1. field level constraint, e.g. only a range of values is allowed
+2. the relation of 2 fields, e.g. 2 password fields must match or 2 fields must define a range
+3. business rules that verify some aspect of the application state, e.g. a username must be unique
+
+Any violation of constraints are returned in one common error type, regardless of the category of 
+the business rule that defines the constraint.
+
+One principle for the core functionality of this crate is to have no dependencies other than
+the std-lib. Support for types of other crates such as [`bigdecimal`] and [`chrono`] are implemented
+as optional crate features. So you can pick and choose which types you need in your application and
+which dependencies you will have in your project.
 
 ## Features
 
 * Definition of a simple validation API
 * Definition of primitive constraints, such as `Length`, `CharCount`, `Bound` and `MustMatch` 
 * Composition of validation functions to implement validation for complex types
-* Separation of validation and presentation of validation errors
+* Separation of the validation process itself and presentation of validation errors
+* One common error type for all kind of validation errors
+* Accumulation of multiple constraint violation
 * The `ValidationError` is designed to help with composing detailed and helpful error messages for 
   targeted to users of an application. Localization or internationalization of error messages is not
   scope of this crate.

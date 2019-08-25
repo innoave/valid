@@ -37,8 +37,8 @@ use std::ops::Deref;
 /// }
 /// ```
 ///
-/// The problem with this approach is, that we can never be sure that the input
-/// string for the `to` argument is a valid email address.
+/// The problem with this approach is, that we can never be sure that the string
+/// input for the `to` argument is a valid email address.
 ///
 /// Lets rewrite the same function using `Validated<Email, String>`.
 ///
@@ -55,11 +55,10 @@ use std::ops::Deref;
 /// a validation function like:
 ///
 /// ```ignore //TODO remove ignore when Email constraint is implemented
+/// # fn send_email(to: Validated<Email, String>, message: String) {
+/// #     unimplemented!()
+/// # }
 /// use valid::{Validated, Validate};
-///
-/// fn send_email(to: Validated<Email, String>, message: String) {
-///     unimplemented!()
-/// }
 ///
 /// let to_addr = "jane.doe@email.net".to_string().validate("email", Email).result(None)
 ///         .expect("valid email address");
@@ -75,11 +74,10 @@ use std::ops::Deref;
 /// value like so:
 ///
 /// ```ignore //TODO remove ignore when Email constraint is implemented
+/// # fn send_email(to: EmailAddress, message: String) {
+/// #     unimplemented!()
+/// # }
 /// use valid::{Validate, Validated};
-///
-/// fn send_email(to: EmailAddress, message: String) {
-///     unimplemented!()
-/// }
 ///
 /// mod domain_model {
 ///     use valid::Validated;
@@ -336,11 +334,6 @@ impl<C, T> Validation<C, T> {
         }
     }
 }
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct Combined;
-
-impl Context for Combined {}
 
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
@@ -670,6 +663,7 @@ impl ValidationError {
     }
 }
 
+/// Type alias for the validation result for shorter type annotations.
 pub type ValidationResult<C, T> = Result<Validated<C, T>, ValidationError>;
 
 pub fn invalid_value(

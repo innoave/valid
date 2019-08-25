@@ -5,10 +5,22 @@
 //! validation function again can be used to build validations for even more
 //! complex types.
 //!
+//! The features and design of `valid` follow these goals:
+//!
+//! 1. Build more complex validations by composition of simplier validation
+//!    functions.
+//! 2. One common API for validating all kind of business rules.
+//! 3. One common error type for all errors resulting from validating any kind
+//!    business rule.
+//! 4. Focus on the validation process. The presentation of validation results
+//!    is not scope of this crate.
+//! 5. No dependencies to 3rd party crates in the core API. Optional
+//!    dependencies to support implementation of advanced constraints.
+//!
 //!
 //! # Validation function, constraints and context
 //!
-//! The goal of the validation is to confirm that a given value of type `T` is
+//! The purpose of the validation is to confirm that a given value of type `T` is
 //! compliant to a set of one or several constraints. To find out whether a
 //! value is compliant we implement a function that checks some constraints on
 //! the given value. The signature of such a validation function might look like
@@ -49,7 +61,7 @@
 //! the API. First the kind of information that is needed for the validation
 //! function to perform the validation and second to provide a common error
 //! type that can be turned into error messages that are meaningful to the user
-//! of the application.
+//! of an application.
 //!
 //! The actual validation function is defined by the
 //! [`Validate`](trait.Validate.html) trait. It takes some context as input.
@@ -440,6 +452,11 @@
 //!
 //! assert!(result.is_ok());
 //! ```
+//!
+//!
+//! # Validation depending on application state
+//!
+//!
 //!
 
 #![doc(html_root_url = "https://docs.rs/valid/0.1.0")]
