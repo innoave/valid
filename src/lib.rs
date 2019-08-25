@@ -456,8 +456,103 @@
 //!
 //! # Validation depending on application state
 //!
+//! A business rule may require that a certain field must be unique within the
+//! application, such as the username in the registration command. Another
+//! business rule may require that an operation may be performed only once, such
+//! as reverting a financial transaction. These are examples where some state
+//! information is needed to validate the business rule. Following the goal of
+//! `valid` to provide one common API and one error type for all kind of
+//! validations, it must be possible to validate those kind of business rules
+//! as well. Lets have a look at an example.
 //!
+//! Lets say we have a command for reverting the booking of a reservation. The
+//! command struct may look like this.
 //!
+//! ```
+//! struct RevertReservation {
+//!     reservation_id: String,
+//! }
+//! ```
+//!
+//! The constraint for our business rule is that a reservation must not be
+//! reverted already.
+//!
+//! ```
+//! struct IsNotReverted;
+//! ```
+//!
+//! To determine whether a reservation has been reverted already we need a
+//! repository that keep track of the reservations and its state.
+//!
+//! ```
+//! mod repo {
+//!     use std::collections::HashMap;
+//!
+//!     pub struct ReservationList {
+//!         reverted_reservations: HashMap<String, bool>,
+//!     }
+//!
+//!     impl ReservationList {
+//!         pub fn is_reservation_reverted(&self, reservation_code: &str) -> bool {
+//!             self.reverted_reservations.get(reservation_code).copied().unwrap_or(false)
+//!         }
+//!     }
+//! }
+//! ```
+//!
+//! Now the interesting part. The implementation of the `Validate` trait. This
+//! may look like:
+//!
+//! ```
+//! # #[derive(Debug, Clone, PartialEq)]
+//! # struct RevertReservation {
+//! #     reservation_code: String,
+//! # }
+//! # struct IsNotReverted;
+//! # mod repo {
+//! #     use std::collections::HashMap;
+//! #
+//! #     pub struct ReservationList {
+//! #         reverted_reservations: HashMap<String, bool>,
+//! #     }
+//! #
+//! #     impl ReservationList {
+//! #         pub fn new() -> Self {
+//! #             Self { reverted_reservations: HashMap::new() }
+//! #         }
+//! #         pub fn is_reservation_reverted(&self, reservation_code: &str) -> bool {
+//! #             self.reverted_reservations.get(reservation_code).copied().unwrap_or(false)
+//! #         }
+//! #     }
+//! # }
+//! use valid::{State, Validate, Validation, invalid_state};
+//! use repo::ReservationList;
+//!
+//! impl<'a> Validate<IsNotReverted, State<&'a ReservationList>> for RevertReservation {
+//!     fn validate(self, context: impl Into<State<&'a ReservationList>>, constraint: &IsNotReverted)
+//!         -> Validation<IsNotReverted, Self>
+//!     {
+//!         let context = context.into();
+//!         if context.is_reservation_reverted(&self.reservation_code) {
+//!             Validation::failure(vec![invalid_state("constraint_violation_reservation_already_reverted", vec![])])
+//!         } else {
+//!             Validation::success(self)
+//!         }
+//!     }
+//! }
+//!
+//! let reservation_list = ReservationList::new();
+//!
+//! let revert_reservation = RevertReservation {
+//!     reservation_code: "HRS1900123456".into(),
+//! };
+//! let original_cmd = revert_reservation.clone();
+//!
+//! let result = revert_reservation.validate(&reservation_list, &IsNotReverted).result();
+//! let validated = result.expect("validating revert reservation command");
+//!
+//! assert_eq!(validated.unwrap(), original_cmd);
+//! ```
 
 #![doc(html_root_url = "https://docs.rs/valid/0.1.0")]
 #![warn(
