@@ -37,9 +37,9 @@
 //! one of the defined constraints is violated.
 //!
 //! The actual validation function of this crate is defined by the
-//! [`Validate`](trait.Validate.html) trait. The only difference to the function
-//! above is that the value is the `self` parameter. Lets have a look what the
-//! other two input parameters 'constraint' and 'context' are about.
+//! [`Validate`] trait. The only difference to the function above is that the
+//! value is the `self` parameter. Lets have a look what the other two input
+//! parameters 'constraint' and 'context' are about.
 //!
 //! A constraint defines how to determine whether a value is valid or not. For
 //! example a value is valid if it is between a lower and an upper limit or
@@ -49,7 +49,7 @@
 //! that an identifier must be unique within an application.
 //!
 //! This crate provides some constraints. Those built in constraints are found
-//! in the [`constraint`](constraint/index.html) module.
+//! in the [`constraint`] module.
 //!
 //! In this library constraints are assigned to one of 3 categories:
 //!
@@ -63,26 +63,21 @@
 //! type that can be turned into error messages that are meaningful to the user
 //! of an application.
 //!
-//! The actual validation function is defined by the
-//! [`Validate`](trait.Validate.html) trait. It takes some context as input.
-//! The context provides additional information to the validation function that
-//! enables us to implement more complex validations and add additional
-//! parameters to the returned error.
+//! The actual validation function is defined by the [`Validate`] trait. It
+//! takes some context as input. The context provides additional information to
+//! the validation function that enables us to implement more complex
+//! validations and add additional parameters to the returned error.
 //!
 //! The context can be one 3 types, where each type corresponds to one of the 3
 //! categories mentioned above:
 //!
-//! * [`FieldName`](struct.FieldName.html) - provides a name of the field that
-//!   is validated
-//! * [`RelatedFields`](struct.RelatedFields.html) - provides the names of two
-//!   related fields
-//! * [`State<S>`](struct.State.html) - provides some generic state information
+//! * [`FieldName`] - provides a name of the field that is validated
+//! * [`RelatedFields`] - provides the names of two related fields
+//! * [`State<S>`] - provides some generic state information
 //!
-//! For the second aspect the [`ValidationError`](struct.ValidationError.html)
-//! struct as defined by this crate contains a list of
-//! [`ConstraintViolation`](enum.ConstraintViolation.html)s. A constraint
-//! violation is an enum with 3 variants, one for each of the 3 categories we
-//! talked about:
+//! For the second aspect the [`ValidationError`] struct as defined by this
+//! crate contains a list of [`ConstraintViolation`]s. A constraint violation is
+//! an enum with 3 variants, one for each of the 3 categories we talked about:
 //!
 //! * `ConstraintViolation::Field(InvalidaValue)`
 //! * `ConstraintViolation::Relation(InvalidRelation)`
@@ -91,24 +86,24 @@
 //!
 //! # Generic implementation of constraints and properties
 //!
-//! The validation function of the [`Validate`](trait.Validate.html) trait is
-//! applied to the combination of a constraint and a value. To validate some
-//! constraint `C` for a value of type `T` the [`Validate`](trait.Validate.html)
-//! trait must be implemented for the combination of these two types.
+//! The validation function of the [`Validate`] trait is applied to the
+//! combination of a constraint and a value. To validate some constraint `C` for
+//! a value of type `T` the [`Validate`] trait must be implemented for the
+//! combination of these two types.
 //!
 //! Most primitive constraints evaluate one property of a value, such as the
 //! length of a string or the number of fraction digits of a decimal number.
 //! If we use traits to determine the relevant property of a value (lets call
-//! them property traits) we can implement the [`Validate`](trait.Validate.html)
-//! trait for all types `T` that implement the according property trait.
+//! them property traits) we can implement the [`Validate`] trait for all types
+//! `T` that implement the according property trait.
 //!
-//! This crate implements the [`Validate`](trait.Validate.html) trait for all
-//! provided constraints for all generic types `T` that implement a certain
-//! property trait. If there is a trait suitable as a property trait defined by
-//! the std-lib we use that otherwise we define our own trait.
+//! This crate implements the [`Validate`] trait for all provided constraints
+//! for all generic types `T` that implement a certain property trait. If there
+//! is a trait suitable as a property trait defined by the std-lib we use that
+//! otherwise we define our own trait.
 //!
-//! The property traits defined by this crate are found in the
-//! [`property`](property/index.html) module.
+//! The property traits defined by this crate are found in the [`property`]
+//! module.
 //!
 //!
 //! # Validating values using the built in constraints
@@ -147,15 +142,12 @@
 //!
 //! # Validation errors
 //!
-//! A failing validation returs a `ValidationError`. It contains a list of
+//! A failing validation returs a [`ValidationError`]. It contains a list of
 //! constraint violations and and an optional message. The message is meant to
 //! describe the context in which the validation has been performed. It is
 //! helpful when validating a struct that represents an input form or a REST
 //! command. In such cases the message would be something like "validating
 //! registration form" or "invalid post entry command".
-//!
-//! The optional message is added by using the `with_message` function to finish
-//! validation (instead of the `result` function).
 //!
 //! Here is an example for a validation that is failing with a message:
 //!
@@ -188,12 +180,12 @@
 //! let error: failure::Error = error.into();
 //! ```
 //!
-//! `ValidationError` implements the `Display` and `std::error::Error` trait
+//! [`ValidationError`] implements the `Display` and `std::error::Error` trait
 //! from std-lib. It also can be converted into a `failure::Error` from the
-//! `failure` crate.
+//! [`failure`] crate.
 //!
 //! With the optional crate feature "serde1" enabled the `ValidationError`
-//! implements `Serialize` and `Deserialize` from the `serde` crate. This
+//! implements `Serialize` and `Deserialize` from the [`serde`] crate. This
 //! enables us to send errors to the client of an application via the network
 //! or store them in a database.
 //!
@@ -202,8 +194,8 @@
 //!
 //! Validating a struct with severals fields typically means to validate each
 //! field and list all the violations if any are found. With `valid` we can
-//! combine validations using the combinator methods, e.g. `Validation::and` and
-//! `Validation::and_then`.
+//! combine validations using the combinator methods, e.g. [`Validation::and`]
+//! and [`Validation::and_then`].
 //!
 //! Lets say we have a struct that represents a command to register a new user.
 //!
@@ -271,7 +263,7 @@
 //! assert_eq!(validated.unwrap(), original);
 //! ```
 //!
-//! Alternatively we can implement the `Validate` trait and do the same
+//! Alternatively we can implement the [`Validate`] trait and do the same
 //! validation:
 //!
 //! ```
@@ -340,7 +332,7 @@
 //!
 //! To implement a custom constraint we first define a struct that represents
 //! the constraint. The constraint usually holds parameters of the constraint
-//! such as allowed limits. Then we implement the `Validate` trait for the
+//! such as allowed limits. Then we implement the [`Validate`] trait for the
 //! combination of our new constraint and any type that should be validated for
 //! this constraint.
 //!
@@ -372,7 +364,7 @@
 //! ```
 //!
 //! To be able to validate whether of value of type `Weekday` is compliant to
-//! our `Workday` constraint we implement the `Validate` trait for the
+//! our `Workday` constraint we implement the [`Validate`] trait for the
 //! `Weekday` trait.
 //!
 //! ```
@@ -500,7 +492,7 @@
 //! }
 //! ```
 //!
-//! Now the interesting part. The implementation of the `Validate` trait. This
+//! Now the interesting part. The implementation of the [`Validate`] trait. This
 //! may look like:
 //!
 //! ```
@@ -553,6 +545,20 @@
 //!
 //! assert_eq!(validated.unwrap(), original_cmd);
 //! ```
+//!
+//! [`constraint`]: constraint/index.html
+//! [`property`]: property/index.html
+//! [`ConstraintViolation`]: enum.ConstraintViolation.html
+//! [`FieldName`]: struct.FieldName.html
+//! [`RelatedFields`]: struct.RelatedFields.html
+//! [`State`]: struct.State.html
+//! [`State<S>`]: struct.State.html
+//! [`Validate`]: trait.Validate.html
+//! [`Validation::and`]: struct.Validation.html#and
+//! [`Validation::and_then`]: struct.Validation.html#and_then
+//! [`ValidationError`]: struct.ValidationError.html
+//! [`failure`]: https://crates.io/crates/failure
+//! [`serde`]: https://crates.io/crates/serde
 
 #![doc(html_root_url = "https://docs.rs/valid/0.1.0")]
 #![warn(

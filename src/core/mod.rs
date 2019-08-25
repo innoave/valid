@@ -431,9 +431,9 @@ impl<C, T> Validation<C, T> {
 ///
 /// | 3rd party crate | supported type  | crate feature |
 /// |-----------------|-----------------|---------------|
-/// | `bigdecimal`    | `BigDecimal`    | `bigdecimal`  |
-/// | `chrono`        | `NaiveDate`     | `chrono`      |
-/// | `chrono`        | `DateTime<Utc>` | `chrono`      |
+/// | [`bigdecimal`]  | `BigDecimal`    | `bigdecimal`  |
+/// | [`chrono`]      | `NaiveDate`     | `chrono`      |
+/// | [`chrono`]      | `DateTime<Utc>` | `chrono`      |
 ///
 /// The `From` trait is implemented for the underlying types. Additionally
 /// there are implementations of the `From` trait for the primitive types `i8`,
@@ -451,6 +451,9 @@ impl<C, T> Validation<C, T> {
 /// The list of supported types is very opinionated and may not fit all kind of
 /// applications. Please file and issue if you feel that support for another
 /// type may be useful!
+///
+/// [`bigdecimal`]: https://crates.io/crates/bigdecimal
+/// [`chrono`]: https://crates.io/crates/chrono
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -654,7 +657,9 @@ impl Display for Field {
 }
 
 /// Holds details about a constraint violation found by validating a constraint
-/// in the `FieldName` context.
+/// in the [`FieldName`] context.
+///
+/// [`FieldName`]: struct.FieldName.html
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct InvalidValue {
@@ -682,7 +687,9 @@ impl Display for InvalidValue {
 }
 
 /// Holds details about a constraint violation found by validating a constraint
-/// in the `RelatedFields` context.
+/// in the [`RelatedFields`] context.
+///
+/// [`RelatedFields`]: struct.RelatedFields.html
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct InvalidRelation {
@@ -714,7 +721,9 @@ impl Display for InvalidRelation {
 }
 
 /// Holds details about a constraint violation found by validating a constraint
-/// in the `State` context.
+/// in the [`State`] context.
+///
+/// [`State`]: struct.State.html
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct InvalidState {
@@ -767,8 +776,8 @@ impl Display for InvalidState {
 /// The construction methods are a convenient way to construct
 /// `ConstraintViolation`s.
 ///
-/// `ConstraintViolation` can be serialized and deserialized using the `serde`
-/// crate. To use the `serde` support the optional crate feature "serde1" must
+/// `ConstraintViolation` can be serialized and deserialized using the [`serde`]
+/// crate. To use the `serde` support the optional crate feature `serde1` must
 /// be enabled.
 ///
 /// [`FieldName`]: struct.FieldName.html
@@ -778,6 +787,7 @@ impl Display for InvalidState {
 /// [`invalid_optional_value`]: fn.invalid_optional_value.html
 /// [`invalid_relation`]: fn.invalid_relation.html
 /// [`invalid_state`]: fn.invalid_state.html
+/// [`serde`]: https://crates.io/crates/serde
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConstraintViolation {
@@ -829,8 +839,10 @@ impl From<InvalidState> for ConstraintViolation {
 /// error management concepts. It can be converted into `failure::Error` using
 /// `From` or `Into` conversion traits.
 ///
-/// It can be serialized and deserialized using the `serde` crate. To enable
-/// `serde` support the optional crate feature "serde1" must be enabled.
+/// It can be serialized and deserialized using the [`serde`] crate. To enable
+/// `serde` support the optional crate feature `serde1` must be enabled.
+///
+/// [`serde`]: https://crates.io/crates/serde
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ValidationError {
