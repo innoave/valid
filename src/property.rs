@@ -14,7 +14,7 @@
 /// This can be property of enums with 2 variants that have a similar meaning to
 /// the boolean type, e.g. yes/no, agreed/rejected, open/closed,...
 pub trait IsChecked {
-    /// Returns whether this value represents `checked`
+    /// Returns whether this value represents "checked"
     fn is_checked(&self) -> bool;
 }
 
