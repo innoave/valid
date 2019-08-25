@@ -83,15 +83,12 @@ mod validation {
         //TODO find a way to prevent this from compiling and still support the
         //     the possibility for custom implementations of the `Validate` trait
 
-        let value: Validated<Bound<i32>, i32> = Validation::success(42)
-            .result(Some("its not really validated".into()))
-            .unwrap();
+        let value: Validated<Bound<i32>, i32> = Validation::success(42).result().unwrap();
 
         assert_eq!(value.unwrap(), 42);
 
-        let value: Validated<NotEmpty, String> = Validation::success("invalid".to_string())
-            .result(Some("its not really validated".into()))
-            .unwrap();
+        let value: Validated<NotEmpty, String> =
+            Validation::success("invalid".to_string()).result().unwrap();
 
         assert_eq!(value.unwrap(), "invalid");
     }

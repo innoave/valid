@@ -98,36 +98,65 @@
 //! [`property`](property/index.html) module.
 //!
 //!
-//! ## Examples
+//! # Validating values using the built in constraints
 //!
 //! Successful validation of a simple variable:
 //!
 //! ```
 //! use valid::Validate;
-//! use valid::constraint::Length;
+//! use valid::constraint::CharCount;
 //!
 //! let text = String::from("the answer is 42");
 //!
-//! let result = text.validate("text", &Length::MinMax(2, 16)).result(Some("validating `text`".into()));
+//! let result = text.validate("text", &CharCount::MinMax(2, 16)).result();
 //!
-//! assert_eq!(result.unwrap().unwrap(), String::from("the answer is 42"));
+//! let validated = result.expect("successful validation");
+//!
+//! assert_eq!(validated.unwrap(), String::from("the answer is 42"));
 //! ```
 //!
+//! Validating a pair of related values:
 //!
-//! Validating a simple variable with an invalid value:
+//! ```
+//! use valid::Validate;
+//! use valid::constraint::MustMatch;
+//!
+//! let password = "s3cr3t".to_string();
+//! let repeated = "s3cr3t".to_string();
+//!
+//! let result = (password, repeated).validate(("password", "repeated"), &MustMatch).result();
+//!
+//! let validated = result.expect("successful validation");
+//!
+//! assert_eq!(validated.unwrap(), ("s3cr3t".to_string(), "s3cr3t".to_string()));
+//! ```
+//!
+//! # Validation errors
+//!
+//! A failing validation returs a `ValidationError`. It contains a list of
+//! constraint violations and and an optional message. The message is ment to
+//! describe the context in which the validation has been performed. It is
+//! helpful when validating a struct that represents an input form or a REST
+//! command. In such a case the message would be something like "validating
+//! registration form" or "invalid post entry command".
+//!
+//! The optional message is added by using the `with_message` function to finish
+//! validation (instead of the `result` function).
+//!
+//! Here is an example for a validation that is failing with a message:
 //!
 //! ```
 //! use valid::{Validate, ValidationError, InvalidValue, Field, Value};
-//! use valid::constraint::Length;
+//! use valid::constraint::CharCount;
 //!
 //! let text = String::from("the answer is 42");
 //!
-//! let result = text.validate("text", &Length::MinMax(2, 15)).result(Some("validating `text`".into()));
+//! let result = text.validate("text", &CharCount::MinMax(2, 15)).with_message("validating `text`");
 //!
 //! assert_eq!(result, Err(ValidationError {
 //!     message: Some("validating `text`".into()),
 //!     violations: vec![InvalidValue {
-//!         code: "invalid.length.max".into(),
+//!         code: "invalid.char.count.max".into(),
 //!         field: Field {
 //!             name: "text".into(),
 //!             actual: Some(Value::Integer(16)),
@@ -136,9 +165,28 @@
 //!     }.into()],
 //! }));
 //!
+//! let error = result.unwrap_err();
+//!
 //! // ValidationError implements the Display trait
-//! assert_eq!(result.unwrap_err().to_string(), "validating `text`: invalid.length.max of text which is 16, expected to be 15");
+//! assert_eq!(error.to_string(), "validating `text`: invalid.char.count.max of text which is 16, expected to be 15");
+//!
+//! // ValidationError can be converted into `failure::Error`
+//! let error: failure::Error = error.into();
 //! ```
+//!
+//! `ValidationError` implements the `Display` and `std::error::Error` trait
+//! from std-lib. It also can be converted into a `failure::Error` from the
+//! `failure` crate.
+//!
+//! # Composite validation functions
+//!
+//!
+//!
+//!
+//! # Custom constraints
+//!
+//!
+//!
 //!
 
 #![doc(html_root_url = "https://docs.rs/valid/0.1.0")]

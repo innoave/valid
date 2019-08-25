@@ -523,6 +523,10 @@ where
 
 /// Two related fields must define a range.
 ///
+/// This constraint is useful for structs with pairs of fields that define a
+/// range such as `valid_from` and `valid_until` or `min_salary` and
+/// `max_salary`.
+///
 /// The validation function can be applied in the
 /// [`RelatedFields`](../core/struct.RelatedFields.html) context.
 /// It is implemented for all types `T` that implement the `PartialOrd` trait.

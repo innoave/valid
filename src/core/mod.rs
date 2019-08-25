@@ -31,7 +31,7 @@ use std::ops::Deref;
 /// For example, lets assume we have a function that expects a valid email
 /// address as input. We could write the function like:
 ///
-/// ```rust
+/// ```
 /// fn send_email(to: String, message: String) {
 ///     unimplemented!()
 /// }
@@ -42,7 +42,7 @@ use std::ops::Deref;
 ///
 /// Lets rewrite the same function using `Validated<Email, String>`.
 ///
-/// ```rust,ignore //TODO remove ignore when Email constraint is implemented
+/// ```ignore //TODO remove ignore when Email constraint is implemented
 /// use valid::Validated;
 ///
 /// fn send_email(to: Validated<Email, String>, message: String) {
@@ -54,7 +54,7 @@ use std::ops::Deref;
 /// function like `Validated(email)` or `Validated::new(email)` we need to use
 /// a validation function like:
 ///
-/// ```rust,ignore //TODO remove ignore when Email constraint is implemented
+/// ```ignore //TODO remove ignore when Email constraint is implemented
 /// use valid::{Validated, Validate};
 ///
 /// fn send_email(to: Validated<Email, String>, message: String) {
@@ -74,7 +74,7 @@ use std::ops::Deref;
 /// type for email addresses, that can only be constructed from a validated
 /// value like so:
 ///
-/// ```rust,ignore //TODO remove ignore when Email constraint is implemented
+/// ```ignore //TODO remove ignore when Email constraint is implemented
 /// use valid::{Validate, Validated};
 ///
 /// fn send_email(to: EmailAddress, message: String) {
@@ -149,7 +149,7 @@ impl<C, T> Deref for Validated<C, T> {
 ///
 /// Lets say we have an enum that represents the days of a week.
 ///
-/// ```rust
+/// ```
 /// #[derive(Debug, PartialEq)]
 /// enum Weekday {
 ///     Monday,
@@ -167,7 +167,7 @@ impl<C, T> Deref for Validated<C, T> {
 /// not. So we define the enum `Workday` with two variants to represent our
 /// constraint.
 ///
-/// ```rust
+/// ```
 /// enum Workday {
 ///     InclSaturday,
 ///     ExclSaturday,
@@ -178,7 +178,7 @@ impl<C, T> Deref for Validated<C, T> {
 /// our `Workday` constraint we implement the `Validate` trait for the
 /// `Weekday` trait.
 ///
-/// ```rust
+/// ```
 /// # #[derive(Debug, PartialEq)]
 /// # enum Weekday {
 /// #     Monday,
@@ -212,7 +212,7 @@ impl<C, T> Deref for Validated<C, T> {
 ///
 /// Now we can validate some values for being workdays.
 ///
-/// ```rust
+/// ```
 /// # #[derive(Debug, PartialEq)]
 /// # enum Weekday {
 /// #     Monday,
@@ -242,17 +242,16 @@ impl<C, T> Deref for Validated<C, T> {
 /// #         }
 /// #     }
 /// # }
-/// let validated = Weekday::Monday.validate("day of release", &Workday::ExclSaturday)
-///     .result(None)
+/// let validated = Weekday::Monday.validate("day of release", &Workday::ExclSaturday).result()
 ///     .expect("a valid workday");
 ///
 /// assert_eq!(validated.unwrap(), Weekday::Monday);
 ///
-/// let result = Weekday::Saturday.validate("day of release", &Workday::ExclSaturday).result(None);
+/// let result = Weekday::Saturday.validate("day of release", &Workday::ExclSaturday).result();
 ///
 /// assert!(result.is_err());
 ///
-/// let result = Weekday::Sunday.validate("day of release", &Workday::InclSaturday).result(None);
+/// let result = Weekday::Sunday.validate("day of release", &Workday::InclSaturday).result();
 ///
 /// assert!(result.is_err());
 /// ```
@@ -399,14 +398,24 @@ impl<C, T> Validation<C, T> {
         )))
     }
 
-    pub fn result(
+    pub fn result(self) -> Result<Validated<C, T>, ValidationError> {
+        match self.0 {
+            InnerValidation::Success(_c, entity) => Ok(Validated(_c, entity)),
+            InnerValidation::Failure(violations) => Err(ValidationError {
+                message: None,
+                violations,
+            }),
+        }
+    }
+
+    pub fn with_message(
         self,
-        message: Option<Cow<'static, str>>,
+        message: impl Into<Cow<'static, str>>,
     ) -> Result<Validated<C, T>, ValidationError> {
         match self.0 {
             InnerValidation::Success(_c, entity) => Ok(Validated(_c, entity)),
             InnerValidation::Failure(violations) => Err(ValidationError {
-                message: message.map(Into::into),
+                message: Some(message.into()),
                 violations,
             }),
         }

@@ -24,5 +24,6 @@ chrono = { version = "0.4", optional = true }
 serde = { version = "1", optional = true, features = ["derive"] }
 
 [dev-dependencies]
+failure = "0.1"
 proptest = "0.9"
 version-sync = "0.8"
