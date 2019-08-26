@@ -1,4 +1,5 @@
 use super::*;
+use proptest::prelude::*;
 
 mod value {
     use super::*;
@@ -71,6 +72,100 @@ mod value {
             }
         }
         assert_eq!(exhaustive_match(Value::Integer(0)), 2);
+    }
+
+    proptest! {
+        #[test]
+        fn can_convert_i8_values_into_integer_value(
+            param in any::<i8>()
+        ) {
+            let value = Value::from(param);
+
+            prop_assert_eq!(value, Value::Integer(i32::from(param)));
+        }
+
+        #[test]
+        fn can_convert_i16_values_into_integer_value(
+            param in any::<i16>()
+        ) {
+            let value = Value::from(param);
+
+            prop_assert_eq!(value, Value::Integer(i32::from(param)));
+        }
+
+        #[test]
+        fn can_convert_i32_values_into_integer_value(
+            param in any::<i16>()
+        ) {
+            let value = Value::from(param);
+
+            prop_assert_eq!(value, Value::Integer(i32::from(param)));
+        }
+
+        #[test]
+        fn can_convert_i64_values_into_long_value(
+            param in any::<i64>()
+        ) {
+            let value = Value::from(param);
+
+            prop_assert_eq!(value, Value::Long(param));
+        }
+
+        #[test]
+        fn can_convert_u8_values_into_integer_value(
+            param in any::<u8>()
+        ) {
+            let value = Value::from(param);
+
+            prop_assert_eq!(value, Value::Integer(i32::from(param)));
+        }
+
+        #[test]
+        fn can_convert_u16_values_into_integer_value(
+            param in any::<u16>()
+        ) {
+            let value = Value::from(param);
+
+            prop_assert_eq!(value, Value::Integer(i32::from(param)));
+        }
+
+        #[test]
+        fn can_convert_u32_values_smaller_than_max_i32_into_integer_value(
+            param in 0..=i32::max_value()
+        ) {
+            let value = Value::from(param as u32);
+
+            prop_assert_eq!(value, Value::Integer(param));
+        }
+
+        #[test]
+        fn can_convert_u32_values_greater_than_max_i32_into_long_value(
+            param in (i32::max_value() as u32 + 1)..=u32::max_value()
+        ) {
+            let value = Value::from(param);
+
+            prop_assert_eq!(value, Value::Long(param as i64));
+        }
+
+        #[test]
+        fn can_convert_u64_values_smaller_than_max_i64_into_long_value(
+            param in 0..=i64::max_value()
+        ) {
+            let value = Value::from(param as u64);
+
+            prop_assert_eq!(value, Value::Long(param));
+        }
+
+        #[test]
+        fn converting_a_u64_value_greater_than_max_i64_panics(
+            param in (i64::max_value() as u64 + 1)..=u64::max_value()
+        ) {
+            let result = std::panic::catch_unwind(||
+                Value::from(param)
+            );
+
+            prop_assert!(result.is_err());
+        }
     }
 }
 

@@ -554,8 +554,8 @@
 //! [`State`]: struct.State.html
 //! [`State<S>`]: struct.State.html
 //! [`Validate`]: trait.Validate.html
-//! [`Validation::and`]: struct.Validation.html#and
-//! [`Validation::and_then`]: struct.Validation.html#and_then
+//! [`Validation::and`]: struct.Validation.html#method.and
+//! [`Validation::and_then`]: struct.Validation.html#method.and_then
 //! [`ValidationError`]: struct.ValidationError.html
 //! [`failure`]: https://crates.io/crates/failure
 //! [`serde`]: https://crates.io/crates/serde

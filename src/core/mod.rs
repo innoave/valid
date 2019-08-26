@@ -424,7 +424,11 @@ impl<C, T> Validation<C, T> {
 
 /// A `Value` represents a value of certain type.
 ///
-/// It has variants for the basic types that or mostly used in applications.
+/// The purpose of a `Value` is to include field values or parameters in
+/// [`ConstraintViolation`]s in a type that allows to display the value in a
+/// localized format as part of a user facing error message.
+///
+/// It has variants for the basic types that are used in most applications.
 ///
 /// Important types of 3rd party crates are supported through optional crate
 /// features:
@@ -452,6 +456,7 @@ impl<C, T> Validation<C, T> {
 /// applications. Please file and issue if you feel that support for another
 /// type may be useful!
 ///
+/// [`ConstraintViolation`]: enum.ConstraintViolation.html
 /// [`bigdecimal`]: https://crates.io/crates/bigdecimal
 /// [`chrono`]: https://crates.io/crates/chrono
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
