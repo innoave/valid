@@ -102,8 +102,8 @@ valid = { version = "0.1", features = ["chrono"] }
 Theses crate features can be enabled in any combination.
 
 [rust]: https://rust-lang.org
-[`bigdecimal`]: https://crates.io/crate/bigdecimal
-[`chrono`]: https://crates.io/crate/chrono
-[`failure`]: https://crates.io/crate/failure
-[`serde`]: https://crates.io/crate/serde
+[`bigdecimal`]: https://crates.io/crates/bigdecimal
+[`chrono`]: https://crates.io/crates/chrono
+[`failure`]: https://crates.io/crates/failure
+[`serde`]: https://crates.io/crates/serde
 [`valid`]: https://crates.io/crates/valid
