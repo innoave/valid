@@ -103,7 +103,7 @@ Theses crate features can be enabled in any combination.
 
 [rust]: https://rust-lang.org
 [`bigdecimal`]: https://crates.io/crate/bigdecimal
-[`chrono`]: https:://crates.io/crate/chrono
-[`failure`]: https:://crates.io/crate/failure
-[`serde`]: https:://crates.io/crate/serde
+[`chrono`]: https://crates.io/crate/chrono
+[`failure`]: https://crates.io/crate/failure
+[`serde`]: https://crates.io/crate/serde
 [`valid`]: https://crates.io/crates/valid
