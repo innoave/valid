@@ -18,6 +18,7 @@
 [tcl]: https://travis-ci.org/innoave/valid/
 [avl]: https://ci.appveyor.com/project/innoave/valid
 [cvl]: https://codecov.io/github/innoave/valid?branch=master
+[lil]: https://opensource.org/licenses/MIT
 [l1l]: https://opensource.org/licenses/MIT
 [l2l]: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -72,7 +73,33 @@ which dependencies you will have in your project.
 * Support for `DateTime<Utc>` and `NaiveDate` of the [`chrono`] crate (optional crate feature
   [chrono])
 
+## Usage
 
+`valid` provides some functionality as optional crate features. To use it we must enable the 
+relevant crate feature in our `Cargo.toml` file.
+
+Serialization and deserialization of `ValdiationError` through the [`serde`] crate:
+
+```toml
+[dependencies]
+valid = { version = "0.1", features = ["serde1"] }
+```
+
+Support for validating `BigDecimal` from the [`bigdecimal`] crate:
+
+```toml
+[dependencies]
+valid = { version = "0.1", features = ["bigdecimal"] }
+```
+ 
+Support for validating `NaiveDate` and `DateTime<Utc>` from the [`chrono`] crate:
+
+```toml
+[dependencies]
+valid = { version = "0.1", features = ["chrono"] }
+```
+ 
+Theses crate features can be enabled in any combination.
 
 [rust]: https://rust-lang.org
 [`bigdecimal`]: https://crates.io/crate/bigdecimal
