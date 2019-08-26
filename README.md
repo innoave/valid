@@ -75,7 +75,7 @@ which dependencies you will have in your project.
 
 ## Usage
 
-`valid` provides some functionality as optional crate features. To use it we must enable the 
+`valid` provides some of its functionality as optional crate features. To use it we must enable the 
 relevant crate feature in our `Cargo.toml` file.
 
 Serialization and deserialization of `ValdiationError` through the [`serde`] crate:
