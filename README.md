@@ -60,7 +60,7 @@ which dependencies you will have in your project.
 * Separation of the validation process itself and presentation of validation errors
 * One common error type for all kind of validation errors
 * Accumulation of multiple constraint violations
-* The `ValidationError` is designed to help with composing detailed and helpful error messages for 
+* The `ValidationError` is designed to help with composing detailed and helpful error messages  
   targeted to users of an application. Localization or internationalization of error messages is not
   scope of this crate.
 * The core functionality has no dependencies to 3rd party crates
@@ -86,14 +86,14 @@ Serialization and deserialization of `ValdiationError` through the [`serde`] cra
 valid = { version = "0.1", features = ["serde1"] }
 ```
 
-Support for validating `BigDecimal` from the [`bigdecimal`] crate:
+Support for validating `BigDecimal` of the [`bigdecimal`] crate:
 
 ```toml
 [dependencies]
 valid = { version = "0.1", features = ["bigdecimal"] }
 ```
  
-Support for validating `NaiveDate` and `DateTime<Utc>` from the [`chrono`] crate:
+Support for validating `NaiveDate` and `DateTime<Utc>` of the [`chrono`] crate:
 
 ```toml
 [dependencies]
