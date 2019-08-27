@@ -55,17 +55,18 @@ which dependencies you will have in your project.
 
 * Definition of a simple validation API
 * Definition of primitive constraints, such as `Length`, `CharCount`, `Bound` and `MustMatch` 
+* Generic implementations of the validation function for the provided constraints
 * Composition of validation functions to implement validation for complex types
 * Separation of the validation process itself and presentation of validation errors
 * One common error type for all kind of validation errors
-* Accumulation of multiple constraint violation
+* Accumulation of multiple constraint violations
 * The `ValidationError` is designed to help with composing detailed and helpful error messages for 
   targeted to users of an application. Localization or internationalization of error messages is not
   scope of this crate.
-* Generic implementations of the validation function for the provided constraints
 * The core functionality has no dependencies to 3rd party crates
 * The error type `ValidationError` implements `std::error::Error` and can be used with the
   [`failure`] crate
+* Error codes are compatible with the naming convention in the [_fluent_] project
 * Serialization and deserialization of `ValidationError` through [`serde`] (optional crate feature
   [serde1])
 * Support for widely used types of 3rd party crates through optional crate features
@@ -105,5 +106,6 @@ Theses crate features can be enabled in any combination.
 [`bigdecimal`]: https://crates.io/crates/bigdecimal
 [`chrono`]: https://crates.io/crates/chrono
 [`failure`]: https://crates.io/crates/failure
+[_fluent_]: https://projectfluent.org/
 [`serde`]: https://crates.io/crates/serde
 [`valid`]: https://crates.io/crates/valid

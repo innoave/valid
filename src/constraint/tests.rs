@@ -21,7 +21,7 @@ mod assert_true {
             Err(ValidationError {
                 message: None,
                 violations: vec![ConstraintViolation::Field(InvalidValue {
-                    code: "invalid.assert.true".into(),
+                    code: "invalid-assert-true".into(),
                     field: Field {
                         name: "agreed".into(),
                         actual: Some(Value::Boolean(false)),
@@ -52,7 +52,7 @@ mod assert_false {
             Err(ValidationError {
                 message: None,
                 violations: vec![ConstraintViolation::Field(InvalidValue {
-                    code: "invalid.assert.false".into(),
+                    code: "invalid-assert-false".into(),
                     field: Field {
                         name: "unchecked".into(),
                         actual: Some(Value::Boolean(true)),
@@ -79,7 +79,7 @@ mod not_empty {
             Err(ValidationError {
                 message: None,
                 violations: vec![ConstraintViolation::Field(InvalidValue {
-                    code: "invalid.not.empty".into(),
+                    code: "invalid-not-empty".into(),
                     field: Field {
                         name: "text_field".into(),
                         actual: None,
@@ -114,7 +114,7 @@ mod not_empty {
             Err(ValidationError {
                 message: None,
                 violations: vec![ConstraintViolation::Field(InvalidValue {
-                    code: "invalid.not.empty".into(),
+                    code: "invalid-not-empty".into(),
                     field: Field {
                         name: "collection".into(),
                         actual: None,
@@ -149,7 +149,7 @@ mod not_empty {
             Err(ValidationError {
                 message: None,
                 violations: vec![ConstraintViolation::Field(InvalidValue {
-                    code: "invalid.not.empty".into(),
+                    code: "invalid-not-empty".into(),
                     field: Field {
                         name: "collection".into(),
                         actual: None,
@@ -184,7 +184,7 @@ mod not_empty {
             Err(ValidationError {
                 message: None,
                 violations: vec![ConstraintViolation::Field(InvalidValue {
-                    code: "invalid.not.empty".into(),
+                    code: "invalid-not-empty".into(),
                     field: Field {
                         name: "collection".into(),
                         actual: None,
@@ -219,7 +219,7 @@ mod not_empty {
             Err(ValidationError {
                 message: None,
                 violations: vec![ConstraintViolation::Field(InvalidValue {
-                    code: "invalid.not.empty".into(),
+                    code: "invalid-not-empty".into(),
                     field: Field {
                         name: "optional_text".into(),
                         actual: None,
@@ -241,7 +241,7 @@ mod not_empty {
             Err(ValidationError {
                 message: None,
                 violations: vec![ConstraintViolation::Field(InvalidValue {
-                    code: "invalid.not.empty".into(),
+                    code: "invalid-not-empty".into(),
                     field: Field {
                         name: "optional_text".into(),
                         actual: None,

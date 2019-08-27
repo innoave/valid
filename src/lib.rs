@@ -162,7 +162,7 @@
 //! assert_eq!(result, Err(ValidationError {
 //!     message: Some("validating `text`".into()),
 //!     violations: vec![InvalidValue {
-//!         code: "invalid.char.count.max".into(),
+//!         code: "invalid-char-count-max".into(),
 //!         field: Field {
 //!             name: "text".into(),
 //!             actual: Some(Value::Integer(16)),
@@ -174,7 +174,7 @@
 //! let error = result.unwrap_err();
 //!
 //! // ValidationError implements the Display trait
-//! assert_eq!(error.to_string(), "validating `text`: invalid.char.count.max of text which is 16, expected to be 15");
+//! assert_eq!(error.to_string(), "validating `text`: invalid-char-count-max of text which is 16, expected to be 15");
 //!
 //! // ValidationError can be converted into `failure::Error`
 //! let error: failure::Error = error.into();
@@ -388,10 +388,10 @@
 //!     fn validate(self, name: impl Into<FieldName>, constraint: &Workday) -> Validation<Workday, Self> {
 //!         match (&self, constraint) {
 //!             (Weekday::Sunday, _) => Validation::failure(vec![
-//!                 invalid_value("invalid.workday.incl.saturday", name, "sunday".to_string(), "monday - friday".to_string())
+//!                 invalid_value("invalid-workday-incl-saturday", name, "sunday".to_string(), "monday - friday".to_string())
 //!             ]),
 //!             (Weekday::Saturday, Workday::ExclSaturday) => Validation::failure(vec![
-//!                 invalid_value("invalid.workday.excl.saturday", name, "saturday".to_string(), "monday - friday".to_string())
+//!                 invalid_value("invalid-workday-excl-saturday", name, "saturday".to_string(), "monday - friday".to_string())
 //!             ]),
 //!             (_, _) => Validation::success(self),
 //!         }
@@ -422,10 +422,10 @@
 //! #     fn validate(self, name: impl Into<FieldName>, constraint: &Workday) -> Validation<Workday, Self> {
 //! #         match (&self, constraint) {
 //! #             (Weekday::Sunday, _) => Validation::failure(vec![
-//! #                 invalid_value("invalid.workday.incl.saturday", name, "sunday".to_string(), "monday - friday".to_string())
+//! #                 invalid_value("invalid-workday-incl-saturday", name, "sunday".to_string(), "monday - friday".to_string())
 //! #             ]),
 //! #             (Weekday::Saturday, Workday::ExclSaturday) => Validation::failure(vec![
-//! #                 invalid_value("invalid.workday.excl.saturday", name, "saturday".to_string(), "monday - friday".to_string())
+//! #                 invalid_value("invalid-workday-excl-saturday", name, "saturday".to_string(), "monday - friday".to_string())
 //! #             ]),
 //! #             (_, _) => Validation::success(self),
 //! #         }
@@ -474,7 +474,7 @@
 //! ```
 //!
 //! To determine whether a reservation has been reverted already we need a
-//! repository that keep track of the reservations and its state.
+//! repository that keeps track of the reservations and its state.
 //!
 //! ```
 //! mod repo {
