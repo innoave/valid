@@ -1,8 +1,11 @@
-# valid - composable validation functions for custom types
+# valid
 
 [![Crates.io][crb]][crl]
 [![Docs.rs][dcb]][dcl]
-[![MIT/Apache][lib]][lil]
+[![Linux Build Status][tcb]][tcl]
+[![Windows Build Status][avb]][avl]
+[![codevoc.io][cvb]][cvl]
+[![MIT/Apache-2.0][lib]][lil]
 
 [crb]: https://img.shields.io/crates/v/valid.svg
 [dcb]: https://docs.rs/valid/badge.svg
@@ -18,7 +21,7 @@
 [tcl]: https://travis-ci.org/innoave/valid/
 [avl]: https://ci.appveyor.com/project/innoave/valid
 [cvl]: https://codecov.io/github/innoave/valid?branch=master
-[lil]: https://opensource.org/licenses/MIT
+[lil]: LICENSE
 [l1l]: https://opensource.org/licenses/MIT
 [l2l]: https://www.apache.org/licenses/LICENSE-2.0
 
