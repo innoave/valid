@@ -1,7 +1,7 @@
-use crate::property::DecimalDigits;
+use crate::property::HasDecimalDigits;
 use bigdecimal::BigDecimal;
 
-impl DecimalDigits for BigDecimal {
+impl HasDecimalDigits for BigDecimal {
     fn integer_digits(&self) -> u64 {
         let (_, exponent) = self.as_bigint_and_exponent();
         let num_digits = self.digits();

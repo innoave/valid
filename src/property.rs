@@ -13,16 +13,16 @@
 ///
 /// This can be property of enums with 2 variants that have a similar meaning to
 /// the boolean type, e.g. yes/no, agreed/rejected, open/closed,...
-pub trait IsChecked {
+pub trait HasCheckedValue {
     /// Returns whether this value represents "checked"
-    fn is_checked(&self) -> bool;
+    fn is_checked_value(&self) -> bool;
 }
 
 /// The empty property of a type.
 ///
 /// This is usually a property of some kind of container like `String`, `Vec`,
 /// `HashSet` or `HashMap`.
-pub trait IsEmptyValue {
+pub trait HasEmptyValue {
     /// Returns whether the value is empty
     fn is_empty_value(&self) -> bool;
 }
@@ -50,7 +50,7 @@ pub trait HasCharCount {
 }
 
 /// Properties of a decimal number.
-pub trait DecimalDigits {
+pub trait HasDecimalDigits {
     /// Returns the number of integer digits
     ///
     /// These are the digits to the left of the decimal point

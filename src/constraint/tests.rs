@@ -265,3 +265,49 @@ mod not_empty {
         }
     }
 }
+
+mod length {
+    use super::*;
+
+    proptest! {
+        #[test]
+        fn validate_exact_length_on_a_string_with_correct_len(
+            target_len in 0u32..1000
+        ) {
+            let input = vec![1; target_len as usize];
+            let original = input.clone();
+
+            let result = input.validate("text_field", &Length::Exact(target_len)).result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), original);
+        }
+
+        #[test]
+        fn validate_exact_length_on_a_string_with_different_len(
+            (target_len, input_len) in (0i32..=i32::max_value()).prop_flat_map(|t_len|
+                (Just(t_len as u32), (0u32..1000).prop_filter("input len must be different than target length",
+                    move |i_len| *i_len != t_len as u32
+                ))
+            ),
+        ) {
+            let input = vec![1; input_len as usize];
+
+            let result = input.validate("text_field", &Length::Exact(target_len)).result();
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-length-exact".into(),
+                    field: Field {
+                        name: "text_field".into(),
+                        actual: Some(Value::Integer(input_len as i32)),
+                        expected: Some(Value::Integer(target_len as i32)),
+                    }
+                })]
+            })
+        )
+        }
+    }
+}

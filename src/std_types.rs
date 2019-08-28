@@ -1,52 +1,52 @@
-use crate::property::{HasCharCount, HasLength, HasMember, IsChecked, IsEmptyValue};
+use crate::property::{HasCharCount, HasCheckedValue, HasEmptyValue, HasLength, HasMember};
 use std::collections::{HashMap, HashSet};
 use std::hash::{BuildHasher, Hash};
 
-impl IsChecked for bool {
-    fn is_checked(&self) -> bool {
+impl HasCheckedValue for bool {
+    fn is_checked_value(&self) -> bool {
         *self
     }
 }
 
-impl IsEmptyValue for String {
+impl HasEmptyValue for String {
     fn is_empty_value(&self) -> bool {
         self.is_empty()
     }
 }
 
-impl IsEmptyValue for &str {
+impl HasEmptyValue for &str {
     fn is_empty_value(&self) -> bool {
         self.is_empty()
     }
 }
 
-impl<T> IsEmptyValue for Vec<T> {
+impl<T> HasEmptyValue for Vec<T> {
     fn is_empty_value(&self) -> bool {
         self.is_empty()
     }
 }
 
-impl<T> IsEmptyValue for &[T] {
+impl<T> HasEmptyValue for &[T] {
     fn is_empty_value(&self) -> bool {
         self.is_empty()
     }
 }
 
-impl<T, S> IsEmptyValue for HashSet<T, S> {
+impl<T, S> HasEmptyValue for HashSet<T, S> {
     fn is_empty_value(&self) -> bool {
         self.is_empty()
     }
 }
 
-impl<K, V, S> IsEmptyValue for HashMap<K, V, S> {
+impl<K, V, S> HasEmptyValue for HashMap<K, V, S> {
     fn is_empty_value(&self) -> bool {
         self.is_empty()
     }
 }
 
-impl<T> IsEmptyValue for Option<T>
+impl<T> HasEmptyValue for Option<T>
 where
-    T: IsEmptyValue,
+    T: HasEmptyValue,
 {
     fn is_empty_value(&self) -> bool {
         match self {

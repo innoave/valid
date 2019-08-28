@@ -16,7 +16,9 @@
 //!
 //! [_fluent_]: https://projectfluent.org/
 
-use crate::property::{DecimalDigits, HasCharCount, HasLength, HasMember, IsChecked, IsEmptyValue};
+use crate::property::{
+    HasCharCount, HasCheckedValue, HasDecimalDigits, HasEmptyValue, HasLength, HasMember,
+};
 use crate::{
     invalid_optional_value, invalid_relation, invalid_value, FieldName, RelatedFields, Validate,
     Validation, Value,
@@ -109,14 +111,14 @@ pub struct AssertTrue;
 
 impl<T> Validate<AssertTrue, FieldName> for T
 where
-    T: IsChecked,
+    T: HasCheckedValue,
 {
     fn validate(
         self,
         name: impl Into<FieldName>,
         _constraint: &AssertTrue,
     ) -> Validation<AssertTrue, Self> {
-        if self.is_checked() {
+        if self.is_checked_value() {
             Validation::success(self)
         } else {
             Validation::failure(vec![invalid_value(INVALID_ASSERT_TRUE, name, false, true)])
@@ -135,14 +137,14 @@ pub struct AssertFalse;
 
 impl<T> Validate<AssertFalse, FieldName> for T
 where
-    T: IsChecked,
+    T: HasCheckedValue,
 {
     fn validate(
         self,
         name: impl Into<FieldName>,
         _constraint: &AssertFalse,
     ) -> Validation<AssertFalse, Self> {
-        if self.is_checked() {
+        if self.is_checked_value() {
             Validation::failure(vec![invalid_value(INVALID_ASSERT_FALSE, name, true, false)])
         } else {
             Validation::success(self)
@@ -161,7 +163,7 @@ pub struct NotEmpty;
 
 impl<T> Validate<NotEmpty, FieldName> for T
 where
-    T: IsEmptyValue,
+    T: HasEmptyValue,
 {
     fn validate(
         self,
@@ -430,7 +432,7 @@ pub struct Digits {
 
 impl<T> Validate<Digits, FieldName> for T
 where
-    T: DecimalDigits,
+    T: HasDecimalDigits,
 {
     fn validate(self, name: impl Into<FieldName>, constraint: &Digits) -> Validation<Digits, Self> {
         let integer = self.integer_digits();
