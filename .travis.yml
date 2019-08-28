@@ -9,9 +9,9 @@ matrix:
   allow_failures:
     - rust: nightly
 
-env:
-  global:
-    - RUSTFLAGS="-C link-dead-code"
+#env:
+#  global:
+#    - RUSTFLAGS="-C link-dead-code"
 
 cache: cargo
 
