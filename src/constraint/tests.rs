@@ -271,7 +271,7 @@ mod length {
 
     proptest! {
         #[test]
-        fn validate_exact_length_on_a_string_with_correct_len(
+        fn validate_exact_length_on_a_string_of_correct_len(
             target_len in 0u32..1000
         ) {
             let input = vec![1; target_len as usize];
@@ -283,7 +283,7 @@ mod length {
         }
 
         #[test]
-        fn validate_exact_length_on_a_string_with_different_len(
+        fn validate_exact_length_on_a_string_of_different_len(
             (target_len, input_len) in (0i32..=i32::max_value()).prop_flat_map(|t_len|
                 (Just(t_len as u32), (0u32..1000).prop_filter("input len must be different than target length",
                     move |i_len| *i_len != t_len as u32
@@ -294,20 +294,172 @@ mod length {
 
             let result = input.validate("text_field", &Length::Exact(target_len)).result();
 
-        assert_eq!(
-            result,
-            Err(ValidationError {
-                message: None,
-                violations: vec![ConstraintViolation::Field(InvalidValue {
-                    code: "invalid-length-exact".into(),
-                    field: Field {
-                        name: "text_field".into(),
-                        actual: Some(Value::Integer(input_len as i32)),
-                        expected: Some(Value::Integer(target_len as i32)),
-                    }
-                })]
-            })
-        )
+            assert_eq!(
+                result,
+                Err(ValidationError {
+                    message: None,
+                    violations: vec![ConstraintViolation::Field(InvalidValue {
+                        code: "invalid-length-exact".into(),
+                        field: Field {
+                            name: "text_field".into(),
+                            actual: Some(Value::Integer(input_len as i32)),
+                            expected: Some(Value::Integer(target_len as i32)),
+                        }
+                    })]
+                })
+            )
+        }
+
+        #[test]
+        fn validate_max_length_on_a_string_of_valid_len(
+            (max_len, input_len) in (0u32..=1000).prop_flat_map(|t_len|
+                (Just(t_len), 0..=t_len)
+            ),
+        ) {
+            let input = vec![1; input_len as usize];
+            let original = input.clone();
+
+            let result = input.validate("text_field", &Length::Max(max_len)).result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), original);
+        }
+
+        #[test]
+        fn validate_max_length_on_a_string_of_invalid_len(
+            (max_len, input_len) in (0u32..=1000).prop_flat_map(|t_len|
+                (Just(t_len), t_len + 1..=t_len + 100)
+            ),
+        ) {
+            let input = vec![1; input_len as usize];
+
+            let result = input.validate("text_field", &Length::Max(max_len)).result();
+
+            assert_eq!(
+                result,
+                Err(ValidationError {
+                    message: None,
+                    violations: vec![ConstraintViolation::Field(InvalidValue {
+                        code: "invalid-length-max".into(),
+                        field: Field {
+                            name: "text_field".into(),
+                            actual: Some(Value::Integer(input_len as i32)),
+                            expected: Some(Value::Integer(max_len as i32)),
+                        }
+                    })]
+                })
+            )
+        }
+
+        #[test]
+        fn validate_min_length_on_a_string_of_valid_len(
+            (min_len, input_len) in (0u32..=1000).prop_flat_map(|t_len|
+                (Just(t_len), t_len..=t_len + 100)
+            ),
+        ) {
+            let input = vec![1; input_len as usize];
+            let original = input.clone();
+
+            let result = input.validate("text_field", &Length::Min(min_len)).result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), original);
+        }
+
+        #[test]
+        fn validate_min_length_on_a_string_of_invalid_len(
+            (min_len, input_len) in (1u32..=1000).prop_flat_map(|t_len|
+                (Just(t_len), 0..t_len)
+            ),
+        ) {
+            let input = vec![1; input_len as usize];
+
+            let result = input.validate("text_field", &Length::Min(min_len)).result();
+
+            assert_eq!(
+                result,
+                Err(ValidationError {
+                    message: None,
+                    violations: vec![ConstraintViolation::Field(InvalidValue {
+                        code: "invalid-length-min".into(),
+                        field: Field {
+                            name: "text_field".into(),
+                            actual: Some(Value::Integer(input_len as i32)),
+                            expected: Some(Value::Integer(min_len as i32)),
+                        }
+                    })]
+                })
+            )
+        }
+
+        #[test]
+        fn validate_minmax_length_on_a_string_of_valid_len(
+            (min_len, max_len, input_len) in (0u32..=100).prop_flat_map(|min|
+                (min..=min + 1000).prop_flat_map(move |max|
+                    (Just(min), Just(max), min..=max)
+                )
+            ),
+        ) {
+            let input = vec![1; input_len as usize];
+            let original = input.clone();
+
+            let result = input.validate("text_field", &Length::MinMax(min_len, max_len)).result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), original);
+        }
+
+        #[test]
+        fn validate_minmax_length_on_a_too_short_string(
+            (min_len, max_len, input_len) in (1u32..=100).prop_flat_map(|min|
+                (min..=min + 1000).prop_flat_map(move |max|
+                    (Just(min), Just(max), 0..min)
+                )
+            ),
+        ) {
+            let input = vec![1; input_len as usize];
+
+            let result = input.validate("text_field", &Length::MinMax(min_len, max_len)).result();
+
+            assert_eq!(
+                result,
+                Err(ValidationError {
+                    message: None,
+                    violations: vec![ConstraintViolation::Field(InvalidValue {
+                        code: "invalid-length-min".into(),
+                        field: Field {
+                            name: "text_field".into(),
+                            actual: Some(Value::Integer(input_len as i32)),
+                            expected: Some(Value::Integer(min_len as i32)),
+                        }
+                    })]
+                })
+            )
+        }
+
+        #[test]
+        fn validate_minmax_length_on_a_too_long_string(
+            (min_len, max_len, input_len) in (1u32..=100).prop_flat_map(|min|
+                (min..=min + 1000).prop_flat_map(move |max|
+                    (Just(min), Just(max), max + 1..max + 100)
+                )
+            ),
+        ) {
+            let input = vec![1; input_len as usize];
+
+            let result = input.validate("text_field", &Length::MinMax(min_len, max_len)).result();
+
+            assert_eq!(
+                result,
+                Err(ValidationError {
+                    message: None,
+                    violations: vec![ConstraintViolation::Field(InvalidValue {
+                        code: "invalid-length-max".into(),
+                        field: Field {
+                            name: "text_field".into(),
+                            actual: Some(Value::Integer(input_len as i32)),
+                            expected: Some(Value::Integer(max_len as i32)),
+                        }
+                    })]
+                })
+            )
         }
     }
 }
