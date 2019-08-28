@@ -45,8 +45,9 @@
 //! example a value is valid if it is between a lower and an upper limit or
 //! the number of characters in a string must be between a lower and an upper
 //! limit. As another example a constraint may define that two fields must
-//! match. Additionally business rules may be defined for an application such as
-//! that an identifier must be unique within an application.
+//! match. Additionally business rules may be defined for some aspect of an
+//! application's state such as that an identifier must be unique within the
+//! application.
 //!
 //! This crate provides some constraints. Those built in constraints are found
 //! in the [`constraint`] module.
@@ -59,7 +60,7 @@
 //!
 //! This categorization of constraints helps with two aspects of the design of
 //! the API. First the kind of information that is needed for the validation
-//! function to perform the validation and second to provide a common error
+//! function to execute the validation and second to provide a common error
 //! type that can be turned into error messages that are meaningful to the user
 //! of an application.
 //!

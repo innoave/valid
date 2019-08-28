@@ -36,8 +36,8 @@ not covered by a trait of the std-lib, a related trait is defined, which we call
 The builtin constraints are implemented for generic types `T` that implement the related property
 trait.
 
-One goal of `valid` is to provide one API that can be used to validate all kind of business rules.
-Constraints are grouped into one of 3 categories:
+One goal of `valid` is to provide one common API that can be used to validate all kind of business 
+rules. Constraints are grouped into one of 3 categories:
  
 1. field level constraint, e.g. only a range of values is allowed
 2. the relation of 2 fields, e.g. 2 password fields must match or 2 fields must define a range
@@ -47,26 +47,27 @@ Any violation of constraints are returned in one common error type, regardless o
 the business rule that defines the constraint.
 
 One principle for the core functionality of this crate is to have no dependencies other than
-the std-lib. Support for types of other crates such as [`bigdecimal`] and [`chrono`] are implemented
-as optional crate features. So you can pick and choose which types you need in your application and
-which dependencies you will have in your project.
+the std-lib. Support for types of 3rd party crates such as [`bigdecimal`] and [`chrono`] are 
+implemented as optional crate features. So you can pick and choose which types you need in your 
+application and which dependencies you will have in your project.
 
 ## Features
 
-* Definition of a simple validation API
+* Common validation API for validating constraints on field values, constraints on related fields 
+  and constraints on application state 
 * Definition of primitive constraints, such as `Length`, `CharCount`, `Bound` and `MustMatch` 
 * Generic implementations of the validation function for the provided constraints
 * Composition of validation functions to implement validation for complex types
-* Separation of the validation process itself and presentation of validation errors
-* One common error type for all kind of validation errors
+* One common error type for validation errors of all kind of constraints
 * Accumulation of multiple constraint violations
+* Separation of the validation process itself and presentation of validation errors
 * The `ValidationError` is designed to help with composing detailed and helpful error messages  
-  targeted to users of an application. Localization or internationalization of error messages is not
-  scope of this crate.
+  targeted to the users of an application. Localization or internationalization of error messages is
+  not scope of this crate.
 * The core functionality has no dependencies to 3rd party crates
+* Error codes are compatible with the naming convention in the [_fluent_] project
 * The error type `ValidationError` implements `std::error::Error` and can be used with the
   [`failure`] crate
-* Error codes are compatible with the naming convention in the [_fluent_] project
 * Serialization and deserialization of `ValidationError` through [`serde`] (optional crate feature
   [serde1])
 * Support for widely used types of 3rd party crates through optional crate features
@@ -100,7 +101,8 @@ Support for validating `NaiveDate` and `DateTime<Utc>` of the [`chrono`] crate:
 valid = { version = "0.1", features = ["chrono"] }
 ```
  
-Theses crate features can be enabled in any combination.
+Theses crate features can be enabled in any combination. For detailed information on how to use this
+crate see the [API documentation at docs.rs](https://docs.rs/valid).
 
 [rust]: https://rust-lang.org
 [`bigdecimal`]: https://crates.io/crates/bigdecimal
