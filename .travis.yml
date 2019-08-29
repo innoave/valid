@@ -34,13 +34,13 @@ addons:
       - libiberty-dev
 
 script:
-  - cargo test
-  - cargo test --all-features
-  - cargo test --features "serde1"
-  - cargo test --features "bigdecimal"
-  - cargo test --features "bigdecimal serde1"
-  - cargo test --features "chrono"
-  - cargo test --features "chrono serde1"
+  - cargo test --verbose
+  - cargo test --all-features --verbose
+  - cargo test --features "serde1" --verbose
+  - cargo test --features "bigdecimal" --verbose
+  - cargo test --features "bigdecimal serde1" --verbose
+  - cargo test --features "chrono" --verbose
+  - cargo test --features "chrono serde1" --verbose
 
 after_success: |
   if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
