@@ -191,8 +191,6 @@ where
 /// [`HasLength`](../property/trait.HasLength.html) property trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Length {
-    /// The value must be of an exact length
-    Exact(u32),
     /// The length of the value must be less than or equal to the specified
     /// maximum
     Max(u32),
@@ -202,6 +200,8 @@ pub enum Length {
     /// The length of the value must be between the specified minimum and
     /// maximum (inclusive)
     MinMax(u32, u32),
+    /// The value must be of an exact length
+    Exact(u32),
 }
 
 impl<T> Validate<Length, FieldName> for T
@@ -211,13 +211,6 @@ where
     fn validate(self, name: impl Into<FieldName>, constraint: &Length) -> Validation<Length, Self> {
         let length = self.length();
         if let Some((code, expected)) = match *constraint {
-            Length::Exact(exact_len) => {
-                if length != exact_len as usize {
-                    Some((INVALID_LENGTH_EXACT, exact_len))
-                } else {
-                    None
-                }
-            }
             Length::Max(max) => {
                 if length > max as usize {
                     Some((INVALID_LENGTH_MAX, max))
@@ -237,6 +230,13 @@ where
                     Some((INVALID_LENGTH_MIN, min))
                 } else if length > max as usize {
                     Some((INVALID_LENGTH_MAX, max))
+                } else {
+                    None
+                }
+            }
+            Length::Exact(exact_len) => {
+                if length != exact_len as usize {
+                    Some((INVALID_LENGTH_EXACT, exact_len))
                 } else {
                     None
                 }
@@ -262,8 +262,6 @@ where
 /// [`HasCharCount`](../property/trait.HasCharCount.html) property trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CharCount {
-    /// The number of characters must be equal to the specified amount
-    Exact(u32),
     /// The number of characters must be less than or equal to the specified
     /// maximum
     Max(u32),
@@ -273,6 +271,8 @@ pub enum CharCount {
     /// The number of characters must be between the specified minimum and
     /// maximum (inclusive)
     MinMax(u32, u32),
+    /// The number of characters must be equal to the specified amount
+    Exact(u32),
 }
 
 impl<T> Validate<CharCount, FieldName> for T
@@ -286,13 +286,6 @@ where
     ) -> Validation<CharCount, Self> {
         let char_count = self.char_count();
         if let Some((code, expected)) = match *constraint {
-            CharCount::Exact(exact_val) => {
-                if char_count != exact_val as usize {
-                    Some((INVALID_CHAR_COUNT_EXACT, exact_val))
-                } else {
-                    None
-                }
-            }
             CharCount::Max(max) => {
                 if char_count > max as usize {
                     Some((INVALID_CHAR_COUNT_MAX, max))
@@ -312,6 +305,13 @@ where
                     Some((INVALID_LENGTH_MIN, min))
                 } else if char_count > max as usize {
                     Some((INVALID_CHAR_COUNT_MAX, max))
+                } else {
+                    None
+                }
+            }
+            CharCount::Exact(exact_val) => {
+                if char_count != exact_val as usize {
+                    Some((INVALID_CHAR_COUNT_EXACT, exact_val))
                 } else {
                     None
                 }
@@ -336,8 +336,6 @@ where
 /// It is implemented for all types `T` that implement the `PartialOrd` trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Bound<T> {
-    /// The value must have the specified value
-    Exact(T),
     /// The value must be between the specified minimum (inclusive) and
     /// maximum (inclusive)
     ClosedRange(T, T),
@@ -350,6 +348,8 @@ pub enum Bound<T> {
     /// The value must be between the specified minimum (exclusive) and
     /// maximum (exclusive)
     OpenRange(T, T),
+    /// The value must have the specified value
+    Exact(T),
 }
 
 impl<T> Validate<Bound<T>, FieldName> for T
@@ -363,13 +363,6 @@ where
         constraint: &Bound<T>,
     ) -> Validation<Bound<T>, Self> {
         if let Some((code, expected)) = match constraint {
-            Bound::Exact(bound) => {
-                if *bound != self {
-                    Some((INVALID_BOUND_EXACT, bound.clone()))
-                } else {
-                    None
-                }
-            }
             Bound::ClosedRange(min, max) => {
                 if self < *min {
                     Some((INVALID_BOUND_CLOSED_MIN, min.clone()))
@@ -402,6 +395,13 @@ where
                     Some((INVALID_BOUND_OPEN_MIN, min.clone()))
                 } else if self >= *max {
                     Some((INVALID_BOUND_OPEN_MAX, max.clone()))
+                } else {
+                    None
+                }
+            }
+            Bound::Exact(bound) => {
+                if *bound != self {
+                    Some((INVALID_BOUND_EXACT, bound.clone()))
                 } else {
                     None
                 }
