@@ -1,10 +1,11 @@
 language: rust
 
 rust:
-  - 1.33.0
-  - 1.34.1
-  - 1.35.0
-  - 1.36.0
+  - 1.32.0
+  - 1.31.0
+  - 1.30.0
+  - 1.29.0
+  - 1.28.0
 #  - stable
 #  - beta
 #  - nightly
@@ -13,9 +14,9 @@ matrix:
   allow_failures:
     - rust: nightly
 
-env:
-  global:
-    - RUSTFLAGS="-C link-dead-code"
+#env:
+#  global:
+#    - RUSTFLAGS="-C link-dead-code"
 
 cache: cargo
 
@@ -38,11 +39,11 @@ addons:
 script:
   - cargo test
   - cargo test --all-features
-  - cargo test --features "serde1"
-  - cargo test --features "bigdecimal"
-  - cargo test --features "bigdecimal serde1"
-  - cargo test --features "chrono"
-  - cargo test --features "chrono serde1"
+#  - cargo test --features "serde1"
+#  - cargo test --features "bigdecimal"
+#  - cargo test --features "bigdecimal serde1"
+#  - cargo test --features "chrono"
+#  - cargo test --features "chrono serde1"
 
 after_success: |
   if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
