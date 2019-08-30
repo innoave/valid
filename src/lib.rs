@@ -175,7 +175,7 @@
 //! let error = result.unwrap_err();
 //!
 //! // ValidationError implements the Display trait
-//! assert_eq!(error.to_string(), "validating `text`: invalid-char-count-max of text which is 16, expected to be 15");
+//! assert_eq!(error.to_string(), "validating `text`: [ { invalid-char-count-max of text which is 16, expected to be 15 } ]");
 //!
 //! // ValidationError can be converted into `failure::Error`
 //! let error: failure::Error = error.into();
