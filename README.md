@@ -104,8 +104,8 @@ Support for validating `NaiveDate` and `DateTime<Utc>` of the [`chrono`] crate:
 valid = { version = "0.1", features = ["chrono"] }
 ```
  
-Theses crate features can be enabled in any combination. For detailed information on how to use this
-crate see the [API documentation at docs.rs](https://docs.rs/valid).
+Theses crate features can be enabled in any combination. For detailed information on how to use
+[`valid`] see the [API documentation at docs.rs](https://docs.rs/valid).
 
 [rust]: https://rust-lang.org
 [`bigdecimal`]: https://crates.io/crates/bigdecimal
