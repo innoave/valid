@@ -876,10 +876,45 @@ impl ValidationError {
     /// Merges this validation error with another validation error and returns
     /// a new validation error that contains all constraint violations from
     /// both errors merged into one list.
+    ///
+    /// If both of the validation errors contain a message than the messages
+    /// are concatenated separated by the string `' / '`. If only one of the
+    /// two errors contain a message than this message becomes the message of
+    /// the resulting error.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use valid::{ValidationError, invalid_value};
+    ///
+    /// let validation_error1 = ValidationError {
+    ///     message: Some("validating a user's age".into()),
+    ///     violations: vec![invalid_value("invalid-bound-min", "age", 12, 13)],
+    /// };
+    /// let validation_error2 = ValidationError {
+    ///     message: Some("validating a user registration command".into()),
+    ///     violations: vec![invalid_value("invalid-length-min", "username", 3, 4)],
+    /// };
+    ///
+    /// let merged_error = validation_error2.merge(validation_error1);
+    ///
+    /// assert_eq!(
+    ///     merged_error,
+    ///     ValidationError {
+    ///         message: Some(
+    ///             "validating a user registration command / validating a user's age".into()
+    ///         ),
+    ///         violations: vec![
+    ///             invalid_value("invalid-length-min", "username", 3, 4),
+    ///             invalid_value("invalid-bound-min", "age", 12, 13),
+    ///         ]
+    ///     }
+    /// );
+    /// ```
     pub fn merge(mut self, other: ValidationError) -> Self {
-        //TODO find a more reasonable solution for merging messages
         self.message = match (self.message, other.message) {
-            (_, Some(msg2)) => Some(msg2),
+            (Some(msg1), Some(msg2)) => Some(msg1 + " / " + msg2),
+            (None, Some(msg2)) => Some(msg2),
             (Some(msg1), None) => Some(msg1),
             (None, None) => None,
         };

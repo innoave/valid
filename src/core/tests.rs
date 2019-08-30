@@ -324,4 +324,106 @@ mod validation_error {
             "[ { invalid-bound-min of age which is 12, expected to be 13 } ]"
         );
     }
+
+    #[test]
+    fn merge_two_validation_errors_with_messages_into_one() {
+        let validation_error1 = ValidationError {
+            message: Some("validating a user's age".into()),
+            violations: vec![invalid_value("invalid-bound-min", "age", 12, 13)],
+        };
+        let validation_error2 = ValidationError {
+            message: Some("validating a user registration command".into()),
+            violations: vec![invalid_value("invalid-length-min", "username", 3, 4)],
+        };
+
+        let merged_error = validation_error2.merge(validation_error1);
+
+        assert_eq!(
+            merged_error,
+            ValidationError {
+                message: Some(
+                    "validating a user registration command / validating a user's age".into()
+                ),
+                violations: vec![
+                    invalid_value("invalid-length-min", "username", 3, 4),
+                    invalid_value("invalid-bound-min", "age", 12, 13),
+                ]
+            }
+        );
+    }
+
+    #[test]
+    fn merge_two_validation_errors_where_the_first_contains_a_message() {
+        let validation_error1 = ValidationError {
+            message: Some("validating a user's age".into()),
+            violations: vec![invalid_value("invalid-bound-min", "age", 12, 13)],
+        };
+        let validation_error2 = ValidationError {
+            message: None,
+            violations: vec![invalid_value("invalid-length-min", "username", 3, 4)],
+        };
+
+        let merged_error = validation_error2.merge(validation_error1);
+
+        assert_eq!(
+            merged_error,
+            ValidationError {
+                message: Some("validating a user's age".into()),
+                violations: vec![
+                    invalid_value("invalid-length-min", "username", 3, 4),
+                    invalid_value("invalid-bound-min", "age", 12, 13),
+                ]
+            }
+        );
+    }
+
+    #[test]
+    fn merge_two_validation_errors_where_the_second_contains_a_message() {
+        let validation_error1 = ValidationError {
+            message: None,
+            violations: vec![invalid_value("invalid-bound-min", "age", 12, 13)],
+        };
+        let validation_error2 = ValidationError {
+            message: Some("validating a user registration command".into()),
+            violations: vec![invalid_value("invalid-length-min", "username", 3, 4)],
+        };
+
+        let merged_error = validation_error2.merge(validation_error1);
+
+        assert_eq!(
+            merged_error,
+            ValidationError {
+                message: Some("validating a user registration command".into()),
+                violations: vec![
+                    invalid_value("invalid-length-min", "username", 3, 4),
+                    invalid_value("invalid-bound-min", "age", 12, 13),
+                ]
+            }
+        );
+    }
+
+    #[test]
+    fn merge_two_validation_errors_where_none_of_them_contains_a_message() {
+        let validation_error1 = ValidationError {
+            message: None,
+            violations: vec![invalid_value("invalid-bound-min", "age", 12, 13)],
+        };
+        let validation_error2 = ValidationError {
+            message: None,
+            violations: vec![invalid_value("invalid-length-min", "username", 3, 4)],
+        };
+
+        let merged_error = validation_error2.merge(validation_error1);
+
+        assert_eq!(
+            merged_error,
+            ValidationError {
+                message: None,
+                violations: vec![
+                    invalid_value("invalid-length-min", "username", 3, 4),
+                    invalid_value("invalid-bound-min", "age", 12, 13),
+                ]
+            }
+        );
+    }
 }
