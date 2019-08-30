@@ -1,6 +1,26 @@
 use super::*;
 use proptest::prelude::*;
 
+mod validation {
+    use super::*;
+    use crate::constraint::{Bound, NotEmpty};
+
+    #[test]
+    fn unfortunately_we_can_construct_an_instance_of_validated_without_doing_any_validation() {
+        //TODO find a way to prevent this from compiling and still support the
+        //     possibility for custom implementations of the `Validate` trait
+
+        let value: Validated<Bound<i32>, i32> = Validation::success(42).result().unwrap();
+
+        assert_eq!(value.unwrap(), 42);
+
+        let value: Validated<NotEmpty, String> =
+            Validation::success("invalid".to_string()).result().unwrap();
+
+        assert_eq!(value.unwrap(), "invalid");
+    }
+}
+
 mod value {
     use super::*;
 
@@ -169,22 +189,139 @@ mod value {
     }
 }
 
-mod validation {
+mod field {
     use super::*;
-    use crate::constraint::{Bound, NotEmpty};
 
     #[test]
-    fn unfortunately_we_can_construct_an_instance_of_validated_without_doing_any_validation() {
-        //TODO find a way to prevent this from compiling and still support the
-        //     possibility for custom implementations of the `Validate` trait
+    fn display_format_field_with_no_values() {
+        let field = Field {
+            name: "your message".into(),
+            actual: None,
+            expected: None,
+        };
 
-        let value: Validated<Bound<i32>, i32> = Validation::success(42).result().unwrap();
+        assert_eq!(
+            field.to_string(),
+            "field: your message, actual: (n.a.), expected: (n.a.)"
+        );
+    }
 
-        assert_eq!(value.unwrap(), 42);
+    #[test]
+    fn display_format_field_with_some_values_should_print_the_values_without_some() {
+        let field = Field {
+            name: "your message".into(),
+            actual: Some(Value::Float(2.41)),
+            expected: Some(Value::Float(1.0)),
+        };
 
-        let value: Validated<NotEmpty, String> =
-            Validation::success("invalid".to_string()).result().unwrap();
+        assert_eq!(
+            field.to_string(),
+            "field: your message, actual: 2.41, expected: 1"
+        );
+    }
+}
 
-        assert_eq!(value.unwrap(), "invalid");
+mod invalid_value {
+    use super::*;
+
+    #[test]
+    fn display_format_invalid_value_of_field_with_actual_and_expected_value() {
+        let invalid_value = InvalidValue {
+            code: "invalid-allowed-characters".into(),
+            field: Field {
+                name: "code".into(),
+                actual: Some(Value::String("Wlske324$2Asd".into())),
+                expected: Some(Value::String("letters and digits".into())),
+            },
+        };
+
+        assert_eq!(
+            invalid_value.to_string(),
+            "invalid-allowed-characters of code which is Wlske324$2Asd, expected to be letters and digits"
+        );
+    }
+}
+
+mod invalid_relation {
+    use super::*;
+
+    #[test]
+    fn display_format_invalid_relation_of_percent_range() {
+        let invalid_relation = InvalidRelation {
+            code: "invalid-from-to".into(),
+            field1: Field {
+                name: "percent_from".into(),
+                actual: Some(Value::Integer(50)),
+                expected: None,
+            },
+            field2: Field {
+                name: "percent_to".into(),
+                actual: Some(Value::Integer(20)),
+                expected: None,
+            },
+        };
+
+        assert_eq!(
+            invalid_relation.to_string(),
+            "invalid-from-to of percent_from which is 50 and percent_to which is 20"
+        );
+    }
+}
+
+mod invalid_state {
+    use super::*;
+
+    #[test]
+    fn display_format_invalid_state_can_format_a_list_of_parameters() {
+        let invalid_state = InvalidState {
+            code: "invalid-username-is-unique".into(),
+            params: vec![Field {
+                name: "username".into(),
+                actual: Some("jon.doe".to_string().into()),
+                expected: None,
+            }],
+        };
+
+        assert_eq!(
+            invalid_state.to_string(),
+            "invalid-username-is-unique for parameters: [ { field: username, actual: jon.doe, expected: (n.a.) } ]"
+        );
+    }
+}
+
+mod validation_error {
+    use super::*;
+
+    #[test]
+    fn display_format_validation_error_with_message_and_multiple_constraint_violations() {
+        let validation_error = ValidationError {
+            message: Some("validating my form".into()),
+            violations: vec![
+                invalid_value("invalid-bound-max", "age", 131, 130),
+                invalid_state(
+                    "invalid-unique-username",
+                    vec![Field {
+                        name: "username".into(),
+                        actual: Some(Value::String("jon.doe".into())),
+                        expected: None,
+                    }],
+                ),
+            ],
+        };
+
+        assert_eq!(validation_error.to_string(), "validating my form: [ { invalid-bound-max of age which is 131, expected to be 130 }, { invalid-unique-username for parameters: [ { field: username, actual: jon.doe, expected: (n.a.) } ] } ]");
+    }
+
+    #[test]
+    fn display_format_validation_error_no_message_and_one_constraint_violation() {
+        let validation_error = ValidationError {
+            message: None,
+            violations: vec![invalid_value("invalid-bound-min", "age", 12, 13)],
+        };
+
+        assert_eq!(
+            validation_error.to_string(),
+            "[ { invalid-bound-min of age which is 12, expected to be 13 } ]"
+        );
     }
 }

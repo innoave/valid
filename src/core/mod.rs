@@ -618,14 +618,16 @@ fn array_to_string<T: Display>(array: &[T]) -> String {
     let len = array.len();
     let mut iter = array.iter();
     match iter.next() {
-        None => String::new(),
+        None => format!("[]"),
         Some(first_elem) => {
-            let mut result = String::with_capacity(len * separator.len());
-            write!(&mut result, "{}", first_elem).unwrap();
+            let mut result = String::with_capacity(len * separator.len() + 4);
+            result.push_str("[ ");
+            write!(&mut result, "{{ {} }}", first_elem).unwrap();
             for elem in iter {
                 result.push_str(separator);
-                write!(&mut result, "{}", elem).unwrap();
+                write!(&mut result, "{{ {} }}", elem).unwrap();
             }
+            result.push_str(" ]");
             result
         }
     }
