@@ -254,6 +254,7 @@ impl<S> State<S> {
     }
 }
 
+#[derive(PartialEq)]
 enum InnerValidation<C, T> {
     Success(PhantomData<C>, T),
     Failure(Vec<ConstraintViolation>),
@@ -273,6 +274,7 @@ enum InnerValidation<C, T> {
 /// [`and`]: #method.and
 /// [`and_then`]: #method.and_then
 /// [`result`]: #method.result
+#[derive(PartialEq)]
 pub struct Validation<C, T>(InnerValidation<C, T>);
 
 impl<C, T> Debug for Validation<C, T>
@@ -296,7 +298,7 @@ impl<C, T> Validation<C, T> {
     /// Constructs a `Validation` for a successful validation step.
     ///
     /// This method is provided to enable users of this crate to implement
-    /// custom validation function.
+    /// custom validation functions.
     pub fn success(valid: T) -> Self {
         Validation(InnerValidation::Success(PhantomData, valid))
     }
@@ -304,7 +306,7 @@ impl<C, T> Validation<C, T> {
     /// Constructs a `Validation` for a failed validation step.
     ///
     /// This method is provided to enable users of this crate to implement
-    /// custom validation function.
+    /// custom validation functions.
     pub fn failure(constraint_violations: impl IntoIterator<Item = ConstraintViolation>) -> Self {
         Validation(InnerValidation::Failure(Vec::from_iter(
             constraint_violations.into_iter(),
@@ -411,9 +413,23 @@ impl<C, T> Validation<C, T> {
     /// Combines this validation with another validation conditionally.
     ///
     /// The other validation is only executed if this validation has been
-    /// successful.
+    /// successful. It has access to the values that have been validated so far.
+    ///
+    /// Those values are provided in a tuple as an argument to the given
+    /// closure. If there is one value that has been validated so far the
+    /// argument `T` to the closure is simple the type of the value. In case of
+    /// two values `T` is a tuple of type `(A, B)`, in case of 3 value the type
+    /// of `T` is a tuple of a tuple and the 3rd value, like `((A, B), C)` and
+    /// so on.
+    ///
+    /// Values that are given as argument to the closure but not used for the
+    /// other validation are not part of the final result of the validation.
+    /// To add unused values to the result of the validation we can use the
+    /// [`combine`] method.
     ///
     /// See the crate level documentation for an example.
+    ///
+    /// [`combine`]: #method.combine
     pub fn and_then<D, U>(self, next: impl FnOnce(T) -> Validation<D, U>) -> Validation<D, U> {
         match self.0 {
             InnerValidation::Success(_, value1) => next(value1),

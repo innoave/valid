@@ -1,7 +1,7 @@
 use super::*;
 use proptest::prelude::*;
 
-mod validation {
+mod validated {
     use super::*;
     use crate::constraint::{Bound, NotEmpty};
 
@@ -18,6 +18,206 @@ mod validation {
             Validation::success("invalid".to_string()).result().unwrap();
 
         assert_eq!(value.unwrap(), "invalid");
+    }
+
+    #[test]
+    fn can_be_dereferenced_to_its_inner_value() {
+        let validated: Validated<Bound<String>, _> =
+            Validated(PhantomData, "some validated text".to_string());
+
+        let inner_value: &str = &validated;
+
+        assert_eq!(inner_value, "some validated text");
+    }
+}
+
+mod context {
+    use super::*;
+
+    #[test]
+    fn can_convert_a_str_into_a_field_name_context() {
+        let field_name: FieldName = "your_name".into();
+
+        assert_eq!(field_name, FieldName("your_name".into()));
+    }
+
+    #[test]
+    fn can_dereference_a_fieldname_context_to_its_inner_value() {
+        let field_name = FieldName("your_message".into());
+
+        let inner_value: &str = &field_name;
+
+        assert_eq!(inner_value, "your_message");
+    }
+
+    #[test]
+    fn can_unwrap_a_field_name_context_into_its_inner_value() {
+        let field_name = FieldName("your_comment".into());
+
+        let inner = field_name.unwrap();
+
+        assert_eq!(inner, Cow::Borrowed("your_comment"));
+    }
+
+    #[test]
+    fn can_convert_a_tuple_of_str_into_a_related_fields_context() {
+        let related_fields: RelatedFields = ("valid_from", "valid_until").into();
+
+        assert_eq!(
+            related_fields,
+            RelatedFields("valid_from".into(), "valid_until".into())
+        );
+    }
+
+    #[test]
+    fn can_get_a_reference_to_the_first_field_of_a_relatedfields_context() {
+        let related_fields = RelatedFields("valid_from".into(), "valid_until".into());
+
+        let first_field: &str = related_fields.first();
+
+        assert_eq!(first_field, "valid_from");
+    }
+
+    #[test]
+    fn can_get_a_reference_to_the_second_field_of_a_relatedfields_context() {
+        let related_fields = RelatedFields("valid_from".into(), "valid_until".into());
+
+        let second_field: &str = related_fields.second();
+
+        assert_eq!(second_field, "valid_until");
+    }
+
+    #[test]
+    fn can_unwrap_a_related_fields_context_into_a_tuple() {
+        let related_fields = RelatedFields("password".into(), "password2".into());
+
+        let inner_tuple = related_fields.unwrap();
+
+        assert_eq!(
+            inner_tuple,
+            (Cow::Borrowed("password"), Cow::Borrowed("password2"))
+        );
+    }
+
+    #[test]
+    fn can_convert_a_custom_value_into_a_state_context() {
+        let state: State<Vec<_>> = vec![25, 50, 75].into();
+
+        assert_eq!(state, State(vec![25, 50, 75]));
+    }
+
+    #[test]
+    fn can_dereference_a_state_context_to_its_inner_value() {
+        let state: State<Vec<_>> = vec![25, 50, 75].into();
+
+        let inner_value: &[_] = &state;
+
+        assert_eq!(inner_value, &[25, 50, 75]);
+    }
+
+    #[test]
+    fn can_unwrap_a_state_context_into_its_inner_value() {
+        let state: State<Vec<_>> = vec![25, 50, 75].into();
+
+        let inner_value: Vec<_> = state.unwrap();
+
+        assert_eq!(inner_value, vec![25, 50, 75]);
+    }
+}
+
+mod validation {
+    use super::*;
+
+    #[test]
+    fn get_the_result_of_a_successful_validation_without_a_message() {
+        let validation: Validation<(), _> = Validation::success("valid text".to_string());
+
+        let result = validation.result();
+
+        assert_eq!(result, Ok(Validated(PhantomData, "valid text".to_string())));
+    }
+
+    #[test]
+    fn get_the_result_of_a_failed_validation_without_a_message() {
+        let validation: Validation<(), String> =
+            Validation::failure(vec![invalid_state("invalid-unique-username", vec![])]);
+
+        let result = validation.result();
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: None,
+                violations: vec![InvalidState {
+                    code: "invalid-unique-username".into(),
+                    params: vec![],
+                }
+                .into()]
+            })
+        );
+    }
+
+    #[test]
+    fn get_the_result_of_a_successful_validation_with_a_message() {
+        let validation: Validation<(), _> = Validation::success("valid text".to_string());
+
+        let result = validation.with_message("validating register new user command");
+
+        assert_eq!(result, Ok(Validated(PhantomData, "valid text".to_string())));
+    }
+
+    #[test]
+    fn get_the_result_of_a_failed_validation_with_a_message() {
+        let validation: Validation<(), String> =
+            Validation::failure(vec![invalid_state("invalid-unique-username", vec![])]);
+
+        let result = validation.with_message("validating register new user command");
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: Some("validating register new user command".into()),
+                violations: vec![InvalidState {
+                    code: "invalid-unique-username".into(),
+                    params: vec![],
+                }
+                .into()]
+            })
+        );
+    }
+
+    #[test]
+    fn combine_a_successful_validation_with_another_value_that_needs_no_further_validation() {
+        let validation: Validation<(), _> = Validation::success("valid text".to_string());
+
+        let combined = validation.combine(42);
+
+        assert_eq!(
+            combined,
+            Validation::success((42, "valid text".to_string()))
+        );
+    }
+
+    #[test]
+    fn map_the_values_of_a_successful_validation_into_a_custom_struct() {
+        #[derive(Debug, PartialEq)]
+        struct RegisterUserForm {
+            username: String,
+            age: i32,
+        }
+
+        let validation: Validation<(), _> = Validation::success((42, "jane.doe".to_string()));
+
+        let mapped: Validation<(), _> =
+            validation.map(|(age, username)| RegisterUserForm { username, age });
+
+        assert_eq!(
+            mapped,
+            Validation::success(RegisterUserForm {
+                username: "jane.doe".into(),
+                age: 42,
+            })
+        );
     }
 }
 
