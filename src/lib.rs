@@ -175,7 +175,7 @@
 //! let error = result.unwrap_err();
 //!
 //! // ValidationError implements the Display trait
-//! assert_eq!(error.to_string(), "validating `text`: [ { invalid-char-count-max of text which is 16, expected to be 15 } ]");
+//! assert_eq!(error.to_string(), "validating `text`: [ invalid-char-count-max of text which is 16, expected to be 15 ]");
 //!
 //! // ValidationError can be converted into `failure::Error`
 //! let error: failure::Error = error.into();
@@ -586,7 +586,8 @@ mod std_types;
 
 // re-export the core API
 pub use crate::core::{
-    invalid_optional_value, invalid_relation, invalid_state, invalid_value, ConstraintViolation,
-    Field, FieldName, InvalidRelation, InvalidState, InvalidValue, RelatedFields, State, Validate,
-    Validated, Validation, ValidationError, ValidationResult, Value,
+    invalid_optional_value, invalid_relation, invalid_state, invalid_value, param,
+    ConstraintViolation, Field, FieldName, InvalidRelation, InvalidState, InvalidValue,
+    RelatedFields, State, Validate, Validated, Validation, ValidationError, ValidationResult,
+    Value,
 };

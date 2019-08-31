@@ -418,8 +418,8 @@ impl<C, T> Validation<C, T> {
     /// Those values are provided in a tuple as an argument to the given
     /// closure. If there is one value that has been validated so far the
     /// argument `T` to the closure is simple the type of the value. In case of
-    /// two values `T` is a tuple of type `(A, B)`, in case of 3 value the type
-    /// of `T` is a tuple of a tuple and the 3rd value, like `((A, B), C)` and
+    /// two values `T` is a tuple of type `(A, B)`, in case of 3 values the type
+    /// of `T` is a tuple of a tuple and the 3rd value like `((A, B), C)` and
     /// so on.
     ///
     /// Values that are given as argument to the closure but not used for the
@@ -433,7 +433,7 @@ impl<C, T> Validation<C, T> {
     pub fn and_then<D, U>(self, next: impl FnOnce(T) -> Validation<D, U>) -> Validation<D, U> {
         match self.0 {
             InnerValidation::Success(_, value1) => next(value1),
-            InnerValidation::Failure(error) => Validation::failure(error),
+            InnerValidation::Failure(violations) => Validation::failure(violations),
         }
     }
 }
@@ -630,22 +630,43 @@ fn option_to_string<T: Display>(optional_value: Option<&T>) -> String {
 }
 
 fn array_to_string<T: Display>(array: &[T]) -> String {
-    let separator = ", ";
+    let separator = " / ";
     let len = array.len();
     let mut iter = array.iter();
     match iter.next() {
-        None => format!("[]"),
+        None => "[]".into(),
         Some(first_elem) => {
             let mut result = String::with_capacity(len * separator.len() + 4);
             result.push_str("[ ");
-            write!(&mut result, "{{ {} }}", first_elem).unwrap();
+            write!(&mut result, "{}", first_elem).unwrap();
             for elem in iter {
                 result.push_str(separator);
-                write!(&mut result, "{{ {} }}", elem).unwrap();
+                write!(&mut result, "{}", elem).unwrap();
             }
             result.push_str(" ]");
             result
         }
+    }
+}
+
+/// A key/value pair used as parameter.
+///
+/// This struct is used to provide more details in [`ConstraintViolation`]s.
+///
+/// [`ConstraintViolation`]: enum.ConstraintViolation.html
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
+pub struct Parameter {
+    /// The name of the parameter
+    pub name: Cow<'static, str>,
+
+    /// The value of the parameter
+    pub value: Value,
+}
+
+impl Display for Parameter {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}={}", self.name, self.value)
     }
 }
 
@@ -758,7 +779,7 @@ pub struct InvalidState {
 
     /// A list of parameters that may be used to provide more meaningful error
     /// messages to the user of an application
-    pub params: Vec<Field>,
+    pub params: Vec<Parameter>,
 }
 
 impl Display for InvalidState {
@@ -942,7 +963,7 @@ impl ValidationError {
 /// Type alias for the validation result for shorter type annotations.
 pub type ValidationResult<C, T> = Result<Validated<C, T>, ValidationError>;
 
-/// Convenience method to construct a [`ConstraintViolation`] for a validation
+/// Convenience function to construct a [`ConstraintViolation`] for a validation
 /// performed in the [`FieldName`] context.
 ///
 /// Use this method if the field value is mandatory. If the field is of type
@@ -967,7 +988,7 @@ pub fn invalid_value(
     })
 }
 
-/// Convenience method to construct a [`ConstraintViolation`] for a validation
+/// Convenience function to construct a [`ConstraintViolation`] for a validation
 /// performed in the [`FieldName`] context.
 ///
 /// Use this method if the field value is optional. If the field is not of type
@@ -992,7 +1013,7 @@ pub fn invalid_optional_value(
     })
 }
 
-/// Convenience method to construct a [`ConstraintViolation`] for a validation
+/// Convenience function to construct a [`ConstraintViolation`] for a validation
 /// performed in the [`RelatedFields`] context.
 ///
 /// [`ConstraintViolation`]: enum.ConstraintViolation.html
@@ -1019,19 +1040,29 @@ pub fn invalid_relation(
     })
 }
 
-/// Convenience method to construct a [`ConstraintViolation`] for a validation
+/// Convenience function to construct a [`ConstraintViolation`] for a validation
 /// performed in the [`State`] context.
 ///
 /// [`ConstraintViolation`]: enum.ConstraintViolation.html
 /// [`State`]: struct.State.html
 pub fn invalid_state(
     code: impl Into<Cow<'static, str>>,
-    params: impl IntoIterator<Item = Field>,
+    params: impl IntoIterator<Item = Parameter>,
 ) -> ConstraintViolation {
     ConstraintViolation::State(InvalidState {
         code: code.into(),
         params: Vec::from_iter(params.into_iter()),
     })
+}
+
+/// Convenience function to construct a [`Parameter`].
+///
+/// [`Parameter`]: struct.Parameter.html
+pub fn param(name: impl Into<Cow<'static, str>>, value: impl Into<Value>) -> Parameter {
+    Parameter {
+        name: name.into(),
+        value: value.into(),
+    }
 }
 
 #[cfg(test)]

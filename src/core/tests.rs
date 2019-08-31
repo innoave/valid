@@ -475,16 +475,15 @@ mod invalid_state {
     fn display_format_invalid_state_can_format_a_list_of_parameters() {
         let invalid_state = InvalidState {
             code: "invalid-username-is-unique".into(),
-            params: vec![Field {
+            params: vec![Parameter {
                 name: "username".into(),
-                actual: Some("jon.doe".to_string().into()),
-                expected: None,
+                value: "jon.doe".to_string().into(),
             }],
         };
 
         assert_eq!(
             invalid_state.to_string(),
-            "invalid-username-is-unique for parameters: [ { field: username, actual: jon.doe, expected: (n.a.) } ]"
+            "invalid-username-is-unique for parameters: [ username=jon.doe ]"
         );
     }
 }
@@ -500,16 +499,15 @@ mod validation_error {
                 invalid_value("invalid-bound-max", "age", 131, 130),
                 invalid_state(
                     "invalid-unique-username",
-                    vec![Field {
+                    vec![Parameter {
                         name: "username".into(),
-                        actual: Some(Value::String("jon.doe".into())),
-                        expected: None,
+                        value: Value::String("jon.doe".into()),
                     }],
                 ),
             ],
         };
 
-        assert_eq!(validation_error.to_string(), "validating my form: [ { invalid-bound-max of age which is 131, expected to be 130 }, { invalid-unique-username for parameters: [ { field: username, actual: jon.doe, expected: (n.a.) } ] } ]");
+        assert_eq!(validation_error.to_string(), "validating my form: [ invalid-bound-max of age which is 131, expected to be 130 / invalid-unique-username for parameters: [ username=jon.doe ] ]");
     }
 
     #[test]
@@ -521,7 +519,7 @@ mod validation_error {
 
         assert_eq!(
             validation_error.to_string(),
-            "[ { invalid-bound-min of age which is 12, expected to be 13 } ]"
+            "[ invalid-bound-min of age which is 12, expected to be 13 ]"
         );
     }
 
