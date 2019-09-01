@@ -3,7 +3,7 @@
 #[cfg(feature = "bigdecimal")]
 use bigdecimal::BigDecimal;
 #[cfg(feature = "chrono")]
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -453,7 +453,7 @@ impl<C, T> Validation<C, T> {
 /// |-----------------|-----------------|---------------|
 /// | [`bigdecimal`]  | `BigDecimal`    | `bigdecimal`  |
 /// | [`chrono`]      | `NaiveDate`     | `chrono`      |
-/// | [`chrono`]      | `DateTime<Utc>` | `chrono`      |
+/// | [`chrono`]      | `DateTime`      | `chrono`      |
 ///
 /// The `From` trait is implemented for the underlying types. Additionally
 /// there are implementations of the `From` trait for the primitive types `i8`,
@@ -616,9 +616,12 @@ impl From<NaiveDate> for Value {
 }
 
 #[cfg(feature = "chrono")]
-impl From<DateTime<Utc>> for Value {
-    fn from(value: DateTime<Utc>) -> Self {
-        Value::DateTime(value)
+impl<Z> From<DateTime<Z>> for Value
+where
+    Z: TimeZone,
+{
+    fn from(value: DateTime<Z>) -> Self {
+        Value::DateTime(value.with_timezone(&Utc))
     }
 }
 

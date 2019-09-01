@@ -354,8 +354,7 @@ pub enum Bound<T> {
 
 impl<T> Validate<Bound<T>, FieldName> for T
 where
-    T: PartialOrd + Clone,
-    Value: From<T>,
+    T: PartialOrd + Clone + Into<Value>,
 {
     fn validate(
         self,
@@ -482,9 +481,8 @@ pub struct Contains<'a, A>(pub &'a A);
 
 impl<'a, T, A> Validate<Contains<'a, A>, FieldName> for T
 where
-    T: HasMember<A>,
-    A: Clone,
-    Value: From<A> + From<T>,
+    T: HasMember<A> + Into<Value>,
+    A: Clone + Into<Value>,
 {
     fn validate(
         self,
@@ -514,8 +512,7 @@ pub struct MustMatch;
 
 impl<T> Validate<MustMatch, RelatedFields> for (T, T)
 where
-    T: Eq,
-    Value: From<T>,
+    T: Eq + Into<Value>,
 {
     fn validate(
         self,
@@ -557,8 +554,7 @@ pub enum FromTo {
 
 impl<T> Validate<FromTo, RelatedFields> for (T, T)
 where
-    T: PartialOrd,
-    Value: From<T>,
+    T: PartialOrd + Into<Value>,
 {
     fn validate(
         self,

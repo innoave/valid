@@ -75,8 +75,7 @@ application and which dependencies you will have in your project.
   [serde1])
 * Support for widely used types of 3rd party crates through optional crate features
 * Support for `BigDecimal` of the [`bigdecimal`] crate (optional crate feature [bigdecimal])
-* Support for `DateTime<Utc>` and `NaiveDate` of the [`chrono`] crate (optional crate feature
-  [chrono])
+* Support for `DateTime` and `NaiveDate` of the [`chrono`] crate (optional crate feature [chrono])
 
 ## Usage
 
@@ -97,7 +96,7 @@ Support for validating `BigDecimal` of the [`bigdecimal`] crate:
 valid = { version = "0.1", features = ["bigdecimal"] }
 ```
  
-Support for validating `NaiveDate` and `DateTime<Utc>` of the [`chrono`] crate:
+Support for validating `NaiveDate` and `DateTime` of the [`chrono`] crate:
 
 ```toml
 [dependencies]
