@@ -1,4 +1,4 @@
-# valid - Let your business logic only accept valid values
+# valid
  
 [![Latest Release]][crates.io]
 [![Documentation]][docs.rs]
@@ -24,6 +24,8 @@
 [appveyor-ci]: https://ci.appveyor.com/project/innoave/valid
 [codecov]: https://codecov.io/github/innoave/valid?branch=master
 [rustc-notes]: https://blog.rust-lang.org/2019/05/23/Rust-1.35.0.html
+
+**Let your business logic only accept valid values**
 
 `valid` is a validation library for the [Rust] language. It let us write validation functions for
 our custom types through composition of available validators. Any custom written validation function
