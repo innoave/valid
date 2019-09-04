@@ -1,4 +1,4 @@
-# valid
+# valid - Let your business logic only accept valid values
  
 [![Latest Release]][crates.io]
 [![Documentation]][docs.rs]
