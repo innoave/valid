@@ -364,9 +364,9 @@
 //! }
 //! ```
 //!
-//! To be able to validate whether of value of type `Weekday` is compliant to
+//! To be able to validate whether a value of type `Weekday` is compliant to
 //! our `Workday` constraint we implement the [`Validate`] trait for the
-//! `Weekday` trait.
+//! `Weekday` enum.
 //!
 //! ```
 //! # #[derive(Debug, PartialEq)]
@@ -587,7 +587,7 @@ mod std_types;
 // re-export the core API
 pub use crate::core::{
     invalid_optional_value, invalid_relation, invalid_state, invalid_value, param,
-    ConstraintViolation, Field, FieldName, InvalidRelation, InvalidState, InvalidValue,
+    ConstraintViolation, Field, FieldName, InvalidRelation, InvalidState, InvalidValue, Parameter,
     RelatedFields, State, Validate, Validated, Validation, ValidationError, ValidationResult,
     Value,
 };
