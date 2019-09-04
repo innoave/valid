@@ -248,7 +248,7 @@ mod validation {
             vec![Parameter::new("reference_code", 42)],
         )]);
 
-        let mapped: Validation<(), _> = validation.map(|val| MyStruct(val));
+        let mapped: Validation<(), _> = validation.map(MyStruct);
 
         assert_eq!(
             mapped,
@@ -450,7 +450,7 @@ mod value {
 
     #[test]
     fn display_format_a_value_of_long() {
-        let value = Value::Long(-29_3848_928_192);
+        let value = Value::Long(-293_848_928_192);
 
         assert_eq!(value.to_string(), "-293848928192");
     }
@@ -572,7 +572,7 @@ mod value {
         ) {
             let value = Value::from(param);
 
-            prop_assert_eq!(value, Value::Long(param as i64));
+            prop_assert_eq!(value, Value::Long(i64::from(param)));
         }
 
         #[test]
