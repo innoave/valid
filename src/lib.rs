@@ -69,8 +69,8 @@
 //! the validation function that enables us to implement more complex
 //! validations and add additional parameters to the returned error.
 //!
-//! The context can be one 3 types, where each type corresponds to one of the 3
-//! categories mentioned above:
+//! The context can be one of 3 types, where each type corresponds to one of the
+//! 3 categories mentioned above:
 //!
 //! * [`FieldName`] - provides a name of the field that is validated
 //! * [`RelatedFields`] - provides the names of two related fields
@@ -95,7 +95,7 @@
 //! Most primitive constraints evaluate one property of a value, such as the
 //! length of a string or the number of fraction digits of a decimal number.
 //! If we use traits to determine the relevant property of a value (lets call
-//! them property traits) we can implement the [`Validate`] trait for all types
+//! them *property traits*) we can implement the [`Validate`] trait for all types
 //! `T` that implement the according property trait.
 //!
 //! This crate implements the [`Validate`] trait for all provided constraints
