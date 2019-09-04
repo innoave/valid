@@ -673,6 +673,15 @@ impl Display for Parameter {
     }
 }
 
+impl Parameter {
+    pub fn new(name: impl Into<Cow<'static, str>>, value: impl Into<Value>) -> Self {
+        Self {
+            name: name.into(),
+            value: value.into(),
+        }
+    }
+}
+
 /// Details about a field.
 ///
 /// This struct is used to provide more details in [`ConstraintViolation`]s.

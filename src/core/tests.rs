@@ -199,6 +199,24 @@ mod validation {
     }
 
     #[test]
+    fn combine_a_failed_validation_with_another_value_has_no_effect() {
+        let validation: Validation<(), i32> = Validation::failure(vec![invalid_state(
+            "invalid-unique",
+            vec![Parameter::new("reference_code", 42)],
+        )]);
+
+        let combined = validation.combine("another value");
+
+        assert_eq!(
+            combined,
+            Validation::failure(vec![invalid_state(
+                "invalid-unique",
+                vec![Parameter::new("reference_code", 42)]
+            )])
+        );
+    }
+
+    #[test]
     fn map_the_values_of_a_successful_validation_into_a_custom_struct() {
         #[derive(Debug, PartialEq)]
         struct RegisterUserForm {
@@ -217,6 +235,27 @@ mod validation {
                 username: "jane.doe".into(),
                 age: 42,
             })
+        );
+    }
+
+    #[test]
+    fn mapping_the_value_of_a_failed_validation_has_no_effect() {
+        #[derive(Debug, PartialEq)]
+        struct MyStruct(i32);
+
+        let validation: Validation<(), i32> = Validation::failure(vec![invalid_state(
+            "invalid-unique",
+            vec![Parameter::new("reference_code", 42)],
+        )]);
+
+        let mapped: Validation<(), _> = validation.map(|val| MyStruct(val));
+
+        assert_eq!(
+            mapped,
+            Validation::failure(vec![invalid_state(
+                "invalid-unique",
+                vec![Parameter::new("reference_code", 42)]
+            )])
         );
     }
 }
