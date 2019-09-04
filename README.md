@@ -25,7 +25,15 @@
 [codecov]: https://codecov.io/github/innoave/valid?branch=master
 [rustc-notes]: https://blog.rust-lang.org/2019/05/23/Rust-1.35.0.html
 
-**Let your business logic only accept valid values!**
+**Let the business logic only accept valid values!**
+
+* Validate custom types by composing primitive validation functions.
+
+* Use one common API for validating all kind of business rules including aspects of the application 
+  state.
+
+* One common error type for all kind of constraint validations. It is designed to help with error
+  messages that are meaningful to the user of an application. 
 
 `valid` is a validation library for the [Rust] language. It let us write validation functions for
 our custom types through composition of available validators. Any custom written validation function
