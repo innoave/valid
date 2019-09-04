@@ -363,7 +363,6 @@ mod validation {
 
 mod value {
     use super::*;
-    use std::str::FromStr;
 
     #[cfg(not(any(feature = "bigdecimal", feature = "chrono")))]
     #[test]
@@ -480,6 +479,8 @@ mod value {
     #[cfg(feature = "bigdecimal")]
     #[test]
     fn display_format_a_value_of_bigdecimal() {
+        use std::str::FromStr;
+
         let value = Value::Decimal(BigDecimal::from_str("1280.77101").unwrap());
 
         assert_eq!(value.to_string(), "1280.77101");
