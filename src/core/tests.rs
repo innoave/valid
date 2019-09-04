@@ -223,6 +223,7 @@ mod validation {
 
 mod value {
     use super::*;
+    use std::str::FromStr;
 
     #[cfg(not(any(feature = "bigdecimal", feature = "chrono")))]
     #[test]
@@ -292,6 +293,72 @@ mod value {
             }
         }
         assert_eq!(exhaustive_match(Value::Integer(0)), 2);
+    }
+
+    #[test]
+    fn display_format_a_value_of_string() {
+        let value = Value::String("some text".into());
+
+        assert_eq!(value.to_string(), "some text");
+    }
+
+    #[test]
+    fn display_format_a_value_of_integer() {
+        let value = Value::Integer(42);
+
+        assert_eq!(value.to_string(), "42");
+    }
+
+    #[test]
+    fn display_format_a_value_of_long() {
+        let value = Value::Long(-29_3848_928_192);
+
+        assert_eq!(value.to_string(), "-293848928192");
+    }
+
+    #[test]
+    fn display_format_a_value_of_float() {
+        let value = Value::Float(-2.54);
+
+        assert_eq!(value.to_string(), "-2.54");
+    }
+
+    #[test]
+    fn display_format_a_value_of_double() {
+        let value = Value::Double(0.012_345_678_9);
+
+        assert_eq!(value.to_string(), "0.0123456789");
+    }
+
+    #[test]
+    fn display_format_a_value_of_boolean() {
+        let value = Value::Boolean(true);
+
+        assert_eq!(value.to_string(), "true");
+    }
+
+    #[cfg(feature = "bigdecimal")]
+    #[test]
+    fn display_format_a_value_of_bigdecimal() {
+        let value = Value::Decimal(BigDecimal::from_str("1280.77101").unwrap());
+
+        assert_eq!(value.to_string(), "1280.77101");
+    }
+
+    #[cfg(feature = "chrono")]
+    #[test]
+    fn display_format_a_value_of_date() {
+        let value = Value::Date(NaiveDate::from_ymd(2019, 8, 31));
+
+        assert_eq!(value.to_string(), "2019-08-31");
+    }
+
+    #[cfg(feature = "chrono")]
+    #[test]
+    fn display_format_a_value_of_date_time() {
+        let value = Value::DateTime(Utc.ymd(2019, 8, 31).and_hms(12, 02, 59));
+
+        assert_eq!(value.to_string(), "2019-08-31 12:02:59 UTC");
     }
 
     proptest! {
