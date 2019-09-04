@@ -258,6 +258,107 @@ mod validation {
             )])
         );
     }
+
+    #[test]
+    fn combine_two_validations_with_and_where_both_are_successful() {
+        #[derive(Debug, PartialEq)]
+        struct RegisterUserForm {
+            username: String,
+            age: i32,
+        }
+
+        let validation1: Validation<(), _> = Validation::success(String::from("jane.doe"));
+        let validation2: Validation<(), _> = Validation::success(42);
+
+        let resulting_validation = validation1.and(validation2);
+
+        assert_eq!(
+            resulting_validation,
+            Validation::success((String::from("jane.doe"), 42))
+        );
+    }
+
+    #[test]
+    fn combine_two_validations_with_and_where_the_first_failed() {
+        #[derive(Debug, PartialEq)]
+        struct RegisterUserForm {
+            username: String,
+            age: i32,
+        }
+
+        let validation1: Validation<(), String> = Validation::failure(vec![invalid_value(
+            "invalid-character",
+            "username",
+            ":".to_string(),
+            "valid username".to_string(),
+        )]);
+        let validation2: Validation<(), _> = Validation::success(42);
+
+        let resulting_validation = validation1.and(validation2);
+
+        assert_eq!(
+            resulting_validation,
+            Validation::failure(vec![invalid_value(
+                "invalid-character",
+                "username",
+                ":".to_string(),
+                "valid username".to_string(),
+            )])
+        );
+    }
+
+    #[test]
+    fn combine_two_validations_with_and_where_the_second_failed() {
+        #[derive(Debug, PartialEq)]
+        struct RegisterUserForm {
+            username: String,
+            age: i32,
+        }
+
+        let validation1: Validation<(), _> = Validation::success(String::from("jane.doe"));
+        let validation2: Validation<(), i32> =
+            Validation::failure(vec![invalid_value("invalid-age", "age", 7, 13)]);
+
+        let resulting_validation = validation1.and(validation2);
+
+        assert_eq!(
+            resulting_validation,
+            Validation::failure(vec![invalid_value("invalid-age", "age", 7, 13,)])
+        );
+    }
+
+    #[test]
+    fn combine_two_validations_with_and_where_both_are_failing() {
+        #[derive(Debug, PartialEq)]
+        struct RegisterUserForm {
+            username: String,
+            age: i32,
+        }
+
+        let validation1: Validation<(), String> = Validation::failure(vec![invalid_value(
+            "invalid-character",
+            "username",
+            ":".to_string(),
+            "valid username".to_string(),
+        )]);
+        let validation2: Validation<(), i32> =
+            Validation::failure(vec![invalid_value("invalid-age", "age", 7, 13)]);
+
+        let resulting_validation = validation1.and(validation2);
+
+        assert_eq!(
+            resulting_validation,
+            Validation::failure(vec![
+                invalid_value(
+                    "invalid-character",
+                    "username",
+                    ":".to_string(),
+                    "valid username".to_string(),
+                ),
+                invalid_value("invalid-age", "age", 7, 13,)
+            ])
+        );
+    }
 }
 
 mod value {
