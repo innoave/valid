@@ -512,7 +512,7 @@ pub struct MustMatch;
 
 impl<T> Validate<MustMatch, RelatedFields> for (T, T)
 where
-    T: Eq + Into<Value>,
+    T: PartialEq + Into<Value>,
 {
     fn validate(
         self,

@@ -1,5 +1,5 @@
 use crate::property::{HasCharCount, HasCheckedValue, HasEmptyValue, HasLength, HasMember};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, LinkedList, VecDeque};
 use std::hash::{BuildHasher, Hash};
 
 impl HasCheckedValue for bool {
@@ -32,6 +32,18 @@ impl<T> HasEmptyValue for &[T] {
     }
 }
 
+impl<T> HasEmptyValue for VecDeque<T> {
+    fn is_empty_value(&self) -> bool {
+        self.is_empty()
+    }
+}
+
+impl<T> HasEmptyValue for LinkedList<T> {
+    fn is_empty_value(&self) -> bool {
+        self.is_empty()
+    }
+}
+
 impl<T, S> HasEmptyValue for HashSet<T, S> {
     fn is_empty_value(&self) -> bool {
         self.is_empty()
@@ -39,6 +51,18 @@ impl<T, S> HasEmptyValue for HashSet<T, S> {
 }
 
 impl<K, V, S> HasEmptyValue for HashMap<K, V, S> {
+    fn is_empty_value(&self) -> bool {
+        self.is_empty()
+    }
+}
+
+impl<T> HasEmptyValue for BTreeSet<T> {
+    fn is_empty_value(&self) -> bool {
+        self.is_empty()
+    }
+}
+
+impl<K, V> HasEmptyValue for BTreeMap<K, V> {
     fn is_empty_value(&self) -> bool {
         self.is_empty()
     }
@@ -80,6 +104,30 @@ impl<T> HasLength for &[T] {
     }
 }
 
+impl<T> HasLength for VecDeque<T> {
+    fn length(&self) -> usize {
+        self.len()
+    }
+}
+
+impl<T> HasLength for LinkedList<T> {
+    fn length(&self) -> usize {
+        self.len()
+    }
+}
+
+impl<T> HasLength for BTreeSet<T> {
+    fn length(&self) -> usize {
+        self.len()
+    }
+}
+
+impl<K, V> HasLength for BTreeMap<K, V> {
+    fn length(&self) -> usize {
+        self.len()
+    }
+}
+
 impl HasCharCount for String {
     fn char_count(&self) -> usize {
         self.chars().count()
@@ -110,12 +158,30 @@ impl HasMember<String> for String {
     }
 }
 
-impl<V, S> HasMember<V> for HashSet<V, S>
+impl<T> HasMember<T> for VecDeque<T>
 where
-    V: Eq + Hash,
+    T: PartialEq,
+{
+    fn has_member(&self, element: &T) -> bool {
+        self.contains(element)
+    }
+}
+
+impl<T> HasMember<T> for LinkedList<T>
+where
+    T: PartialEq,
+{
+    fn has_member(&self, element: &T) -> bool {
+        self.contains(element)
+    }
+}
+
+impl<T, S> HasMember<T> for HashSet<T, S>
+where
+    T: Eq + Hash,
     S: BuildHasher,
 {
-    fn has_member(&self, element: &V) -> bool {
+    fn has_member(&self, element: &T) -> bool {
         self.contains(element)
     }
 }
@@ -124,6 +190,24 @@ impl<K, V, S> HasMember<K> for HashMap<K, V, S>
 where
     K: Eq + Hash,
     S: BuildHasher,
+{
+    fn has_member(&self, element: &K) -> bool {
+        self.contains_key(element)
+    }
+}
+
+impl<T> HasMember<T> for BTreeSet<T>
+where
+    T: Ord,
+{
+    fn has_member(&self, element: &T) -> bool {
+        self.contains(element)
+    }
+}
+
+impl<K, V> HasMember<K> for BTreeMap<K, V>
+where
+    K: Ord,
 {
     fn has_member(&self, element: &K) -> bool {
         self.contains_key(element)

@@ -1,18 +1,22 @@
 //! Property traits
 //!
 //! This module defines property traits that enable the generic implementation
-//! of the `Validate` trait of the provided constraints.
+//! of the [`Validate`] trait of the provided constraints.
 //!
-//! Property traits are one way to derive an implementation of `Validate` trait
-//! for a custom type. For example if we have a custom type that represents
-//! some kind of decimal number for which we implement the `Decimal` trait we
-//! can use the existing implementation of the `Validate` trait for the `Digits`
-//! constraint and our custom type.
+//! Property traits are one way to derive an implementation of [`Validate`]
+//! trait for a custom type. For example if we have a custom type that
+//! represents some kind of decimal number for which we implement the
+//! [`HasDecimalDigits`] trait we can use the existing implementation of the
+//! [`Validate`] trait for the [`Digits`] constraint and our custom type.
+//!
+//! [`Digits`]: ../constraint/struct.Digits.html
+//! [`HasDecimalDigits`]: trait.HasDecimalDigits.html
+//! [`Validate`]: ../trait.Validate.html
 
 /// The checked property of a type.
 ///
 /// This can be property of enums with 2 variants that have a similar meaning to
-/// the boolean type, e.g. yes/no, agreed/rejected, open/closed,...
+/// the boolean type, e.g. yes/no, agreed/rejected, open/closed, etc.
 pub trait HasCheckedValue {
     /// Returns whether this value represents "checked"
     fn is_checked_value(&self) -> bool;
