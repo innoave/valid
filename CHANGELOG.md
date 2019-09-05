@@ -9,13 +9,13 @@ for Rust libraries in [RFC #1105](https://github.com/rust-lang/rfcs/blob/master/
 ### Changes
 
 * implementation of `Validate<MustMatch, RelatedFields>` for `(T, T)` required only `PartialEq`
-  instead of total `Eq`.
+  instead of total `Eq`
+* implement `HasEmptyValue`, `HasLength` and `HasMember` for `VecDeque`, `LinkedList`, `BTreeSet`
+  and `BTreeMap` (issue #2)
 
 ### Fixes
 
-* make struct `Parameter` public
-* implement `HasEmptyValue`, `HasLength` and `HasMember` for `VecDeque`, `LinkedList`, `BTreeSet`
-  and `BTreeMap`
+* make struct `Parameter` public (issue #3)
 * minor fixes in documentation
 
 ## 0.1.0 : 2019-09-04
