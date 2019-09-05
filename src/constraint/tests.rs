@@ -271,7 +271,7 @@ mod length {
 
     proptest! {
         #[test]
-        fn validate_exact_length_on_a_string_of_correct_len(
+        fn validate_exact_length_on_a_vec_of_correct_len(
             target_len in 0u32..1000
         ) {
             let input = vec![1; target_len as usize];
@@ -283,7 +283,7 @@ mod length {
         }
 
         #[test]
-        fn validate_exact_length_on_a_string_of_different_len(
+        fn validate_exact_length_on_a_vec_of_different_len(
             (target_len, input_len) in (0i32..=i32::max_value()).prop_flat_map(|t_len|
                 (Just(t_len as u32), (0u32..1000).prop_filter("input len must be different than target length",
                     move |i_len| *i_len != t_len as u32
@@ -311,7 +311,7 @@ mod length {
         }
 
         #[test]
-        fn validate_max_length_on_a_string_of_valid_len(
+        fn validate_max_length_on_a_vec_of_valid_len(
             (max_len, input_len) in (0u32..=1000).prop_flat_map(|t_len|
                 (Just(t_len), 0..=t_len)
             ),
@@ -325,7 +325,7 @@ mod length {
         }
 
         #[test]
-        fn validate_max_length_on_a_string_of_invalid_len(
+        fn validate_max_length_on_a_vec_of_invalid_len(
             (max_len, input_len) in (0u32..=1000).prop_flat_map(|t_len|
                 (Just(t_len), t_len + 1..=t_len + 100)
             ),
@@ -351,7 +351,7 @@ mod length {
         }
 
         #[test]
-        fn validate_min_length_on_a_string_of_valid_len(
+        fn validate_min_length_on_a_vec_of_valid_len(
             (min_len, input_len) in (0u32..=1000).prop_flat_map(|t_len|
                 (Just(t_len), t_len..=t_len + 100)
             ),
@@ -365,7 +365,7 @@ mod length {
         }
 
         #[test]
-        fn validate_min_length_on_a_string_of_invalid_len(
+        fn validate_min_length_on_a_vec_of_invalid_len(
             (min_len, input_len) in (1u32..=1000).prop_flat_map(|t_len|
                 (Just(t_len), 0..t_len)
             ),
@@ -391,7 +391,7 @@ mod length {
         }
 
         #[test]
-        fn validate_minmax_length_on_a_string_of_valid_len(
+        fn validate_minmax_length_on_a_vec_of_valid_len(
             (min_len, max_len, input_len) in (0u32..=100).prop_flat_map(|min|
                 (min..=min + 1000).prop_flat_map(move |max|
                     (Just(min), Just(max), min..=max)
@@ -407,7 +407,7 @@ mod length {
         }
 
         #[test]
-        fn validate_minmax_length_on_a_too_short_string(
+        fn validate_minmax_length_on_a_too_small_vec(
             (min_len, max_len, input_len) in (1u32..=100).prop_flat_map(|min|
                 (min..=min + 1000).prop_flat_map(move |max|
                     (Just(min), Just(max), 0..min)
@@ -435,7 +435,7 @@ mod length {
         }
 
         #[test]
-        fn validate_minmax_length_on_a_too_long_string(
+        fn validate_minmax_length_on_a_too_big_vec(
             (min_len, max_len, input_len) in (1u32..=100).prop_flat_map(|min|
                 (min..=min + 1000).prop_flat_map(move |max|
                     (Just(min), Just(max), max + 1..max + 100)
