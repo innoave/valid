@@ -74,7 +74,7 @@ application and which dependencies you will have in your project.
 * One common error type for validation errors of all kind of constraints
 * Accumulation of multiple constraint violations
 * Separation of the validation process itself and presentation of validation errors
-* The `ValidationError` is designed to help with composing detailed and helpful error messages  
+* The `ValidationError` is designed to help with composing detailed and helpful error messages
   targeted to the users of an application. Localization or internationalization of error messages is
   not scope of this crate.
 * The core functionality has no dependencies to 3rd party crates
@@ -82,10 +82,10 @@ application and which dependencies you will have in your project.
 * The error type `ValidationError` implements `std::error::Error` and can be used with the
   [`failure`] crate
 * Serialization and deserialization of `ValidationError` through [`serde`] (optional crate feature
-  [serde1])
+  "serde1")
 * Support for widely used types of 3rd party crates through optional crate features
-* Support for `BigDecimal` of the [`bigdecimal`] crate (optional crate feature [bigdecimal])
-* Support for `DateTime` and `NaiveDate` of the [`chrono`] crate (optional crate feature [chrono])
+* Support for `BigDecimal` of the [`bigdecimal`] crate (optional crate feature "bigdecimal")
+* Support for `DateTime` and `NaiveDate` of the [`chrono`] crate (optional crate feature "chrono"])
 
 ## Usage
 
