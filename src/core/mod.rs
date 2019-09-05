@@ -60,7 +60,7 @@ use std::ops::Deref;
 /// # }
 /// use valid::{Validated, Validate};
 ///
-/// let to_addr = "jane.doe@email.net".to_string().validate("email", Email).result(None)
+/// let to_addr = "jane.doe@email.net".to_string().validate("email", Email).result()
 ///         .expect("valid email address");
 ///
 /// send_email(to_addr, "some message".into());
@@ -674,6 +674,7 @@ impl Display for Parameter {
 }
 
 impl Parameter {
+    /// Construct a new `Parameter` with given name and value.
     pub fn new(name: impl Into<Cow<'static, str>>, value: impl Into<Value>) -> Self {
         Self {
             name: name.into(),

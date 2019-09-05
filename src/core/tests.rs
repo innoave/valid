@@ -261,14 +261,11 @@ mod validation {
 
     #[test]
     fn combine_two_validations_with_and_where_both_are_successful() {
-        #[derive(Debug, PartialEq)]
-        struct RegisterUserForm {
-            username: String,
-            age: i32,
-        }
+        let username = String::from("jane.doe");
+        let age = 42;
 
-        let validation1: Validation<(), _> = Validation::success(String::from("jane.doe"));
-        let validation2: Validation<(), _> = Validation::success(42);
+        let validation1: Validation<(), _> = Validation::success(username);
+        let validation2: Validation<(), _> = Validation::success(age);
 
         let resulting_validation = validation1.and(validation2);
 
@@ -280,11 +277,8 @@ mod validation {
 
     #[test]
     fn combine_two_validations_with_and_where_the_first_failed() {
-        #[derive(Debug, PartialEq)]
-        struct RegisterUserForm {
-            username: String,
-            age: i32,
-        }
+        let _username = String::from("jane:doe");
+        let age = 42;
 
         let validation1: Validation<(), String> = Validation::failure(vec![invalid_value(
             "invalid-character",
@@ -292,7 +286,7 @@ mod validation {
             ":".to_string(),
             "valid username".to_string(),
         )]);
-        let validation2: Validation<(), _> = Validation::success(42);
+        let validation2: Validation<(), _> = Validation::success(age);
 
         let resulting_validation = validation1.and(validation2);
 
@@ -309,13 +303,10 @@ mod validation {
 
     #[test]
     fn combine_two_validations_with_and_where_the_second_failed() {
-        #[derive(Debug, PartialEq)]
-        struct RegisterUserForm {
-            username: String,
-            age: i32,
-        }
+        let username = String::from("jane.doe");
+        let _age = 7;
 
-        let validation1: Validation<(), _> = Validation::success(String::from("jane.doe"));
+        let validation1: Validation<(), _> = Validation::success(username);
         let validation2: Validation<(), i32> =
             Validation::failure(vec![invalid_value("invalid-age", "age", 7, 13)]);
 
@@ -329,11 +320,8 @@ mod validation {
 
     #[test]
     fn combine_two_validations_with_and_where_both_are_failing() {
-        #[derive(Debug, PartialEq)]
-        struct RegisterUserForm {
-            username: String,
-            age: i32,
-        }
+        let _username = String::from("jane:doe");
+        let _age = 7;
 
         let validation1: Validation<(), String> = Validation::failure(vec![invalid_value(
             "invalid-character",
@@ -357,6 +345,92 @@ mod validation {
                 ),
                 invalid_value("invalid-age", "age", 7, 13,)
             ])
+        );
+    }
+
+    #[test]
+    fn combine_two_validations_with_and_then_where_both_are_successful() {
+        let password = String::from("s3cr3t");
+        let password2 = String::from("s3cr3t");
+
+        let validation1: Validation<(), _> = Validation::success(password);
+
+        let resulting_validation: Validation<(), _> =
+            validation1.and_then(|password| Validation::success((password, password2)));
+
+        assert_eq!(
+            resulting_validation,
+            Validation::success((String::from("s3cr3t"), String::from("s3cr3t")))
+        );
+    }
+
+    #[test]
+    fn combine_two_validations_with_and_then_where_the_first_failed() {
+        let _password = String::from("s3");
+        let password2 = String::from("s3");
+
+        let validation1: Validation<(), String> =
+            Validation::failure(vec![invalid_value("invalid-length-min", "password", 2, 6)]);
+
+        let resulting_validation: Validation<(), _> =
+            validation1.and_then(|password| Validation::success((password, password2)));
+
+        assert_eq!(
+            resulting_validation,
+            Validation::failure(vec![invalid_value("invalid-length-min", "password", 2, 6)])
+        );
+    }
+
+    #[test]
+    fn combine_two_validations_with_and_then_where_the_second_failed() {
+        let password = String::from("s3cr3t");
+        let _password2 = String::from("s3crEt");
+
+        let validation1: Validation<(), _> = Validation::success(password);
+
+        let resulting_validation: Validation<(), String> = validation1.and_then(|_password| {
+            Validation::failure(vec![invalid_relation(
+                "invalid-must-match",
+                "password",
+                "s3cr3t".to_string(),
+                "password2",
+                "s3crEt".to_string(),
+            )])
+        });
+
+        assert_eq!(
+            resulting_validation,
+            Validation::failure(vec![invalid_relation(
+                "invalid-must-match",
+                "password",
+                "s3cr3t".to_string(),
+                "password2",
+                "s3crEt".to_string(),
+            )])
+        );
+    }
+
+    #[test]
+    fn combine_two_validations_with_and_then_where_both_are_failing() {
+        let _password = String::from("s3");
+        let _password2 = String::from("s3crEt");
+
+        let validation1: Validation<(), String> =
+            Validation::failure(vec![invalid_value("invalid-length-min", "password", 2, 6)]);
+
+        let resulting_validation: Validation<(), String> = validation1.and_then(|_password| {
+            Validation::failure(vec![invalid_relation(
+                "invalid-must-match",
+                "password",
+                "s3cr3t".to_string(),
+                "password2",
+                "s3crEt".to_string(),
+            )])
+        });
+
+        assert_eq!(
+            resulting_validation,
+            Validation::failure(vec![invalid_value("invalid-length-min", "password", 2, 6)])
         );
     }
 }
