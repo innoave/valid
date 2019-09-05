@@ -561,7 +561,7 @@
 //! [`failure`]: https://crates.io/crates/failure
 //! [`serde`]: https://crates.io/crates/serde
 
-#![doc(html_root_url = "https://docs.rs/valid/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/valid/0.2.0")]
 #![warn(
     bare_trait_objects,
     missing_copy_implementations,

@@ -96,21 +96,21 @@ Serialization and deserialization of `ValdiationError` through the [`serde`] cra
 
 ```toml
 [dependencies]
-valid = { version = "0.1", features = ["serde1"] }
+valid = { version = "0.2", features = ["serde1"] }
 ```
 
 Support for validating `BigDecimal` of the [`bigdecimal`] crate:
 
 ```toml
 [dependencies]
-valid = { version = "0.1", features = ["bigdecimal"] }
+valid = { version = "0.2", features = ["bigdecimal"] }
 ```
  
 Support for validating `NaiveDate` and `DateTime` of the [`chrono`] crate:
 
 ```toml
 [dependencies]
-valid = { version = "0.1", features = ["chrono"] }
+valid = { version = "0.2", features = ["chrono"] }
 ```
  
 Theses crate features can be enabled in any combination. For detailed information on how to use
