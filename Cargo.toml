@@ -11,8 +11,8 @@ aspects of the application state. One common error type for all kind of constrai
 is designed to help with error messages that are meaningful to the user of an application.
 """
 
-categories = ["value-formatting"]
 keywords = ["validate", "user-input", "business-rules", "constraints", "validation"]
+categories = ["rust-patterns", "value-formatting"]
 documentation = "https://docs.rs/valid"
 repository = "https://github.com/innoave/valid"
 readme = "README.md"
