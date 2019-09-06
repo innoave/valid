@@ -300,7 +300,7 @@ where
             }
             CharCount::MinMax(min, max) => {
                 if char_count < min {
-                    Some((INVALID_LENGTH_MIN, min))
+                    Some((INVALID_CHAR_COUNT_MIN, min))
                 } else if char_count > max {
                     Some((INVALID_CHAR_COUNT_MAX, max))
                 } else {

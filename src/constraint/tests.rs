@@ -523,4 +523,129 @@ mod char_count {
             })
         )
     }
+
+    #[test]
+    fn validate_max_char_count_on_a_compliant_string() {
+        let text = "I ❤ you";
+        assert_eq!(text.len(), 9);
+        let original = text.clone();
+
+        let result = text.validate("message", &CharCount::Max(7)).result();
+
+        assert_eq!(result.unwrap().unwrap(), original);
+    }
+
+    #[test]
+    fn validate_max_char_count_on_a_to_long_string() {
+        let text = "I ❤ you!";
+        assert_eq!(text.len(), 10);
+
+        let result = text.validate("message", &CharCount::Max(7)).result();
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-char-count-max".into(),
+                    field: Field {
+                        name: "message".into(),
+                        actual: Some(Value::Integer(8)),
+                        expected: Some(Value::Integer(7)),
+                    }
+                })]
+            })
+        )
+    }
+
+    #[test]
+    fn validate_min_char_count_on_a_compliant_string() {
+        let text = "I ❤ you!";
+        assert_eq!(text.len(), 10);
+        let original = text.clone();
+
+        let result = text.validate("message", &CharCount::Min(8)).result();
+
+        assert_eq!(result.unwrap().unwrap(), original);
+    }
+
+    #[test]
+    fn validate_min_char_count_on_a_to_short_string() {
+        let text = "I ❤ you";
+        assert_eq!(text.len(), 9);
+
+        let result = text.validate("message", &CharCount::Min(8)).result();
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-char-count-min".into(),
+                    field: Field {
+                        name: "message".into(),
+                        actual: Some(Value::Integer(7)),
+                        expected: Some(Value::Integer(8)),
+                    }
+                })]
+            })
+        )
+    }
+
+    #[test]
+    fn validate_minmax_char_count_on_a_compliant_string() {
+        let text = "I ❤ you";
+        assert_eq!(text.len(), 9);
+        let original = text.clone();
+
+        let result = text.validate("message", &CharCount::MinMax(6, 7)).result();
+
+        assert_eq!(result.unwrap().unwrap(), original);
+    }
+
+    #[test]
+    fn validate_minmax_char_count_on_a_to_long_string() {
+        let text = "I ❤ you!";
+        assert_eq!(text.len(), 10);
+
+        let result = text.validate("message", &CharCount::MinMax(6, 7)).result();
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-char-count-max".into(),
+                    field: Field {
+                        name: "message".into(),
+                        actual: Some(Value::Integer(8)),
+                        expected: Some(Value::Integer(7)),
+                    }
+                })]
+            })
+        )
+    }
+
+    #[test]
+    fn validate_minmax_char_count_on_a_to_short_string() {
+        let text = "I ❤ u";
+        assert_eq!(text.len(), 7);
+
+        let result = text.validate("message", &CharCount::MinMax(6, 7)).result();
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-char-count-min".into(),
+                    field: Field {
+                        name: "message".into(),
+                        actual: Some(Value::Integer(5)),
+                        expected: Some(Value::Integer(6)),
+                    }
+                })]
+            })
+        )
+    }
 }
