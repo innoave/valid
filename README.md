@@ -85,7 +85,7 @@ application and which dependencies you will have in your project.
   "serde1")
 * Support for widely used types of 3rd party crates through optional crate features
 * Support for `BigDecimal` of the [`bigdecimal`] crate (optional crate feature "bigdecimal")
-* Support for `DateTime` and `NaiveDate` of the [`chrono`] crate (optional crate feature "chrono"])
+* Support for `DateTime` and `NaiveDate` of the [`chrono`] crate (optional crate feature "chrono")
 
 ## Usage
 

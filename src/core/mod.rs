@@ -7,6 +7,7 @@ use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::convert::TryFrom;
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Debug, Display, Write};
@@ -577,7 +578,7 @@ impl From<u64> for Value {
     fn from(value: u64) -> Self {
         assert!(
             value <= i64::max_value() as u64,
-            "u64 value to big to be converted to i64"
+            "u64 value too big to be converted to i64"
         );
         Value::Long(value as i64)
     }
@@ -622,6 +623,40 @@ where
 {
     fn from(value: DateTime<Z>) -> Self {
         Value::DateTime(value.with_timezone(&Utc))
+    }
+}
+
+impl TryFrom<usize> for Value {
+    type Error = &'static str;
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        std::panic::catch_unwind(|| {
+            if value <= i32::max_value() as usize {
+                Value::Integer(value as i32)
+            } else if value <= i64::max_value() as usize {
+                Value::Long(value as i64)
+            } else {
+                panic!("usize value too big to be converted to i64")
+            }
+        })
+        .map_err(|_| "usize value too big to be converted to i64")
+    }
+}
+
+impl TryFrom<isize> for Value {
+    type Error = &'static str;
+
+    fn try_from(value: isize) -> Result<Self, Self::Error> {
+        std::panic::catch_unwind(|| {
+            if value <= i32::max_value() as isize {
+                Value::Integer(value as i32)
+            } else if value <= i64::max_value() as isize {
+                Value::Long(value as i64)
+            } else {
+                panic!("isize value too big to be converted to i64")
+            }
+        })
+        .map_err(|_| "isize value too big to be converted to i64")
     }
 }
 

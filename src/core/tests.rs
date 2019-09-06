@@ -668,6 +668,28 @@ mod value {
 
             prop_assert!(result.is_err());
         }
+
+        #[ignore] //TODO decide whether to keep From<u64> which might panic or support TryFrom<u64> only
+        #[test]
+        fn try_from_u64_never_panics(
+            value in any::<u64>()
+        ) {
+            let _result = Value::try_from(value);
+        }
+
+        #[test]
+        fn try_from_usize_never_panics(
+            value in any::<usize>()
+        ) {
+            let _result = Value::try_from(value);
+        }
+
+        #[test]
+        fn try_from_isize_never_panics(
+            value in any::<isize>()
+        ) {
+            let _result = Value::try_from(value);
+        }
     }
 }
 
