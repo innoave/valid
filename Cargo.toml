@@ -5,10 +5,10 @@ authors = ["haraldmaida"]
 license = "MIT/Apache-2.0"
 
 description = """
-Let the business logic only accept valid values! Validate custom types by composing primitive
-validation functions. Use one common API for validating all kind of business rules including
-aspects of the application state. One common error type for all kind of constraint violations. It
-is designed to help with error messages that are meaningful to the user of an application.
+Validate custom types by composing primitive validation functions. Use one common API for validating
+all kind of business rules including aspects of the application state. One common error type for all
+kind of constraint violations. It is designed to help with error messages that are meaningful to the
+user of an application.
 """
 
 keywords = ["validate", "user-input", "business-rules", "constraints", "validation"]
