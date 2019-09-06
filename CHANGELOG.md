@@ -11,6 +11,8 @@ for Rust libraries in [RFC #1105](https://github.com/rust-lang/rfcs/blob/master/
 
 * use parameters of type `usize` instead `u32` for the constraints `Length` and `CharCount`, which
   enables an implementation that should never panic (issue #4)
+  
+* rename constraint `FromTo` to `MustDefineRange`
 
 ### Enhancements
   

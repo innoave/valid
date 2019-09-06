@@ -94,12 +94,12 @@ pub const INVALID_CONTAINS_ELEMENT: &str = "invalid-contains-element";
 pub const INVALID_MUST_MATCH: &str = "invalid-must-match";
 
 /// Error code: the first value is not less than or equal to the second value
-/// (`FromTo::Inclusive` constraint)
-pub const INVALID_FROM_TO_INCLUSIVE: &str = "invalid-from-to-inclusive";
+/// (`MustDefineRange::Inclusive` constraint)
+pub const INVALID_MUST_DEFINE_RANGE_INCLUSIVE: &str = "invalid-must-define-range-inclusive";
 
 /// Error code: the first value is not less than the second value
-/// (`FromTo::Exclusive` constraint)
-pub const INVALID_FROM_TO_EXCLUSIVE: &str = "invalid-from-to-exclusive";
+/// (`MustDefineRange::Exclusive` constraint)
+pub const INVALID_MUST_DEFINE_RANGE_EXCLUSIVE: &str = "invalid-must-define-range-exclusive";
 
 /// The value must be true.
 ///
@@ -539,31 +539,30 @@ where
 /// [`RelatedFields`](../core/struct.RelatedFields.html) context.
 /// It is implemented for all types `T` that implement the `PartialOrd` trait.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-//TODO find better name for `FromTo`
-pub enum FromTo {
+pub enum MustDefineRange {
     /// The first value must be less than or equal to the second value
     Inclusive,
     /// The first value must be less than the second value
     Exclusive,
 }
 
-impl<T> Validate<FromTo, RelatedFields> for (T, T)
+impl<T> Validate<MustDefineRange, RelatedFields> for (T, T)
 where
     T: PartialOrd + Into<Value>,
 {
     fn validate(
         self,
         fields: impl Into<RelatedFields>,
-        constraint: &FromTo,
-    ) -> Validation<FromTo, Self> {
+        constraint: &MustDefineRange,
+    ) -> Validation<MustDefineRange, Self> {
         let RelatedFields(name1, name2) = fields.into();
         match *constraint {
-            FromTo::Inclusive => {
+            MustDefineRange::Inclusive => {
                 if self.0 <= self.1 {
                     Validation::success(self)
                 } else {
                     Validation::failure(vec![invalid_relation(
-                        INVALID_FROM_TO_INCLUSIVE,
+                        INVALID_MUST_DEFINE_RANGE_INCLUSIVE,
                         name1,
                         self.0,
                         name2,
@@ -571,12 +570,12 @@ where
                     )])
                 }
             }
-            FromTo::Exclusive => {
+            MustDefineRange::Exclusive => {
                 if self.0 < self.1 {
                     Validation::success(self)
                 } else {
                     Validation::failure(vec![invalid_relation(
-                        INVALID_FROM_TO_EXCLUSIVE,
+                        INVALID_MUST_DEFINE_RANGE_EXCLUSIVE,
                         name1,
                         self.0,
                         name2,

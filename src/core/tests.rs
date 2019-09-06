@@ -752,7 +752,7 @@ mod invalid_relation {
     #[test]
     fn display_format_invalid_relation_of_percent_range() {
         let invalid_relation = InvalidRelation {
-            code: "invalid-from-to".into(),
+            code: "invalid-must-define-range-inclusive".into(),
             field1: Field {
                 name: "percent_from".into(),
                 actual: Some(Value::Integer(50)),
@@ -767,7 +767,7 @@ mod invalid_relation {
 
         assert_eq!(
             invalid_relation.to_string(),
-            "invalid-from-to of percent_from which is 50 and percent_to which is 20"
+            "invalid-must-define-range-inclusive of percent_from which is 50 and percent_to which is 20"
         );
     }
 }
