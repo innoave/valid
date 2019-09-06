@@ -272,9 +272,9 @@ mod length {
     proptest! {
         #[test]
         fn validate_exact_length_on_a_vec_of_correct_len(
-            target_len in 0u32..1000
+            target_len in 0usize..1000
         ) {
-            let input = vec![1; target_len as usize];
+            let input = vec![1; target_len];
             let original = input.clone();
 
             let result = input.validate("text_field", &Length::Exact(target_len)).result();
@@ -285,12 +285,12 @@ mod length {
         #[test]
         fn validate_exact_length_on_a_vec_of_different_len(
             (target_len, input_len) in (0i32..=i32::max_value()).prop_flat_map(|t_len|
-                (Just(t_len as u32), (0u32..1000).prop_filter("input len must be different than target length",
-                    move |i_len| *i_len != t_len as u32
+                (Just(t_len as usize), (0usize..1000).prop_filter("input len must be different than target length",
+                    move |i_len| *i_len != t_len as usize
                 ))
             ),
         ) {
-            let input = vec![1; input_len as usize];
+            let input = vec![1; input_len];
 
             let result = input.validate("text_field", &Length::Exact(target_len)).result();
 
@@ -312,11 +312,11 @@ mod length {
 
         #[test]
         fn validate_max_length_on_a_vec_of_valid_len(
-            (max_len, input_len) in (0u32..=1000).prop_flat_map(|t_len|
+            (max_len, input_len) in (0usize..=1000).prop_flat_map(|t_len|
                 (Just(t_len), 0..=t_len)
             ),
         ) {
-            let input = vec![1; input_len as usize];
+            let input = vec![1; input_len];
             let original = input.clone();
 
             let result = input.validate("text_field", &Length::Max(max_len)).result();
@@ -326,11 +326,11 @@ mod length {
 
         #[test]
         fn validate_max_length_on_a_vec_of_invalid_len(
-            (max_len, input_len) in (0u32..=1000).prop_flat_map(|t_len|
+            (max_len, input_len) in (0usize..=1000).prop_flat_map(|t_len|
                 (Just(t_len), t_len + 1..=t_len + 100)
             ),
         ) {
-            let input = vec![1; input_len as usize];
+            let input = vec![1; input_len];
 
             let result = input.validate("text_field", &Length::Max(max_len)).result();
 
@@ -352,11 +352,11 @@ mod length {
 
         #[test]
         fn validate_min_length_on_a_vec_of_valid_len(
-            (min_len, input_len) in (0u32..=1000).prop_flat_map(|t_len|
+            (min_len, input_len) in (0usize..=1000).prop_flat_map(|t_len|
                 (Just(t_len), t_len..=t_len + 100)
             ),
         ) {
-            let input = vec![1; input_len as usize];
+            let input = vec![1; input_len];
             let original = input.clone();
 
             let result = input.validate("text_field", &Length::Min(min_len)).result();
@@ -366,11 +366,11 @@ mod length {
 
         #[test]
         fn validate_min_length_on_a_vec_of_invalid_len(
-            (min_len, input_len) in (1u32..=1000).prop_flat_map(|t_len|
+            (min_len, input_len) in (1usize..=1000).prop_flat_map(|t_len|
                 (Just(t_len), 0..t_len)
             ),
         ) {
-            let input = vec![1; input_len as usize];
+            let input = vec![1; input_len];
 
             let result = input.validate("text_field", &Length::Min(min_len)).result();
 
@@ -392,13 +392,13 @@ mod length {
 
         #[test]
         fn validate_minmax_length_on_a_vec_of_valid_len(
-            (min_len, max_len, input_len) in (0u32..=100).prop_flat_map(|min|
+            (min_len, max_len, input_len) in (0usize..=100).prop_flat_map(|min|
                 (min..=min + 1000).prop_flat_map(move |max|
                     (Just(min), Just(max), min..=max)
                 )
             ),
         ) {
-            let input = vec![1; input_len as usize];
+            let input = vec![1; input_len];
             let original = input.clone();
 
             let result = input.validate("text_field", &Length::MinMax(min_len, max_len)).result();
@@ -408,13 +408,13 @@ mod length {
 
         #[test]
         fn validate_minmax_length_on_a_too_small_vec(
-            (min_len, max_len, input_len) in (1u32..=100).prop_flat_map(|min|
+            (min_len, max_len, input_len) in (1usize..=100).prop_flat_map(|min|
                 (min..=min + 1000).prop_flat_map(move |max|
                     (Just(min), Just(max), 0..min)
                 )
             ),
         ) {
-            let input = vec![1; input_len as usize];
+            let input = vec![1; input_len];
 
             let result = input.validate("text_field", &Length::MinMax(min_len, max_len)).result();
 
@@ -436,13 +436,13 @@ mod length {
 
         #[test]
         fn validate_minmax_length_on_a_too_big_vec(
-            (min_len, max_len, input_len) in (1u32..=100).prop_flat_map(|min|
+            (min_len, max_len, input_len) in (1usize..=100).prop_flat_map(|min|
                 (min..=min + 1000).prop_flat_map(move |max|
                     (Just(min), Just(max), max + 1..max + 100)
                 )
             ),
         ) {
-            let input = vec![1; input_len as usize];
+            let input = vec![1; input_len];
 
             let result = input.validate("text_field", &Length::MinMax(min_len, max_len)).result();
 
@@ -461,5 +461,66 @@ mod length {
                 })
             )
         }
+    }
+}
+
+mod char_count {
+    use super::*;
+
+    #[test]
+    fn validate_exact_char_count_on_a_compliant_string() {
+        let text = "I ❤ you";
+        assert_eq!(text.len(), 9);
+        let original = text.clone();
+
+        let result = text.validate("message", &CharCount::Exact(7)).result();
+
+        assert_eq!(result.unwrap().unwrap(), original);
+    }
+
+    #[test]
+    fn validate_exact_char_count_on_a_to_short_string() {
+        let text = "I ❤ u";
+        assert_eq!(text.len(), 7);
+
+        let result = text.validate("message", &CharCount::Exact(7)).result();
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-char-count-exact".into(),
+                    field: Field {
+                        name: "message".into(),
+                        actual: Some(Value::Integer(5)),
+                        expected: Some(Value::Integer(7)),
+                    }
+                })]
+            })
+        )
+    }
+
+    #[test]
+    fn validate_exact_char_count_on_a_to_long_string() {
+        let text = "I ❤ you!";
+        assert_eq!(text.len(), 10);
+
+        let result = text.validate("message", &CharCount::Exact(7)).result();
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-char-count-exact".into(),
+                    field: Field {
+                        name: "message".into(),
+                        actual: Some(Value::Integer(8)),
+                        expected: Some(Value::Integer(7)),
+                    }
+                })]
+            })
+        )
     }
 }

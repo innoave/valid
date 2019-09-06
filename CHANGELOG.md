@@ -4,6 +4,19 @@ All user visible changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/), as described
 for Rust libraries in [RFC #1105](https://github.com/rust-lang/rfcs/blob/master/text/1105-api-evolution.md)
 
+
+## [unreleased]
+
+### Breaking changes
+
+* use parameters of type `usize` instead `u32` for the constraints `Length` and `CharCount`, which
+  enables an implementation that should never panic (issue #4)
+
+### Enhancements
+  
+* implement `TryFrom<usize>` and `TryFrom<isize>` for `Value`
+
+
 ## 0.2.0 : 2019-09-05
 
 ### Changes

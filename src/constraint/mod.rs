@@ -23,6 +23,7 @@ use crate::{
     invalid_optional_value, invalid_relation, invalid_value, FieldName, RelatedFields, Validate,
     Validation, Value,
 };
+use std::convert::TryFrom;
 
 /// Error code: the value does not assert to true (`AssertTrue` constraint)
 pub const INVALID_ASSERT_TRUE: &str = "invalid-assert-true";
@@ -193,15 +194,15 @@ where
 pub enum Length {
     /// The length of the value must be less than or equal to the specified
     /// maximum
-    Max(u32),
+    Max(usize),
     /// The length of the value must be greater than or equal to the specified
     /// minimum
-    Min(u32),
+    Min(usize),
     /// The length of the value must be between the specified minimum and
     /// maximum (inclusive)
-    MinMax(u32, u32),
+    MinMax(usize, usize),
     /// The value must be of an exact length
-    Exact(u32),
+    Exact(usize),
 }
 
 impl<T> Validate<Length, FieldName> for T
@@ -212,42 +213,39 @@ where
         let length = self.length();
         if let Some((code, expected)) = match *constraint {
             Length::Max(max) => {
-                if length > max as usize {
+                if length > max {
                     Some((INVALID_LENGTH_MAX, max))
                 } else {
                     None
                 }
             }
             Length::Min(min) => {
-                if length < min as usize {
+                if length < min {
                     Some((INVALID_LENGTH_MIN, min))
                 } else {
                     None
                 }
             }
             Length::MinMax(min, max) => {
-                if length < min as usize {
+                if length < min {
                     Some((INVALID_LENGTH_MIN, min))
-                } else if length > max as usize {
+                } else if length > max {
                     Some((INVALID_LENGTH_MAX, max))
                 } else {
                     None
                 }
             }
             Length::Exact(exact_len) => {
-                if length != exact_len as usize {
+                if length != exact_len {
                     Some((INVALID_LENGTH_EXACT, exact_len))
                 } else {
                     None
                 }
             }
         } {
-            Validation::failure(vec![invalid_value(
-                code,
-                name,
-                self.length() as u32,
-                expected,
-            )])
+            let actual = Value::try_from(length).ok();
+            let expected = Value::try_from(expected).ok();
+            Validation::failure(vec![invalid_optional_value(code, name, actual, expected)])
         } else {
             Validation::success(self)
         }
@@ -264,15 +262,15 @@ where
 pub enum CharCount {
     /// The number of characters must be less than or equal to the specified
     /// maximum
-    Max(u32),
+    Max(usize),
     /// The number of characters must be greater than or equal to the specified
     /// minimum
-    Min(u32),
+    Min(usize),
     /// The number of characters must be between the specified minimum and
     /// maximum (inclusive)
-    MinMax(u32, u32),
+    MinMax(usize, usize),
     /// The number of characters must be equal to the specified amount
-    Exact(u32),
+    Exact(usize),
 }
 
 impl<T> Validate<CharCount, FieldName> for T
@@ -287,42 +285,39 @@ where
         let char_count = self.char_count();
         if let Some((code, expected)) = match *constraint {
             CharCount::Max(max) => {
-                if char_count > max as usize {
+                if char_count > max {
                     Some((INVALID_CHAR_COUNT_MAX, max))
                 } else {
                     None
                 }
             }
             CharCount::Min(min) => {
-                if char_count < min as usize {
+                if char_count < min {
                     Some((INVALID_CHAR_COUNT_MIN, min))
                 } else {
                     None
                 }
             }
             CharCount::MinMax(min, max) => {
-                if char_count < min as usize {
+                if char_count < min {
                     Some((INVALID_LENGTH_MIN, min))
-                } else if char_count > max as usize {
+                } else if char_count > max {
                     Some((INVALID_CHAR_COUNT_MAX, max))
                 } else {
                     None
                 }
             }
             CharCount::Exact(exact_val) => {
-                if char_count != exact_val as usize {
+                if char_count != exact_val {
                     Some((INVALID_CHAR_COUNT_EXACT, exact_val))
                 } else {
                     None
                 }
             }
         } {
-            Validation::failure(vec![invalid_value(
-                code,
-                name,
-                self.char_count() as u32,
-                expected,
-            )])
+            let actual = Value::try_from(char_count).ok();
+            let expected = Value::try_from(expected).ok();
+            Validation::failure(vec![invalid_optional_value(code, name, actual, expected)])
         } else {
             Validation::success(self)
         }
