@@ -649,3 +649,258 @@ mod char_count {
         )
     }
 }
+
+mod bound {
+    use super::*;
+
+    proptest! {
+        #[test]
+        fn validate_bound_exact_on_a_compliant_float_value(
+            exact_bound in any::<f32>()
+        ) {
+            let float_value = exact_bound;
+
+            let result = float_value.validate("float_value", &Bound::Exact(exact_bound)).result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), float_value);
+        }
+
+        #[test]
+        fn validate_bound_exact_on_a_float_with_different_value(
+            exact_bound in any::<f32>(),
+            difference in any::<bool>(),
+        ) {
+            let float_value = if difference {
+                exact_bound * 0.999 - 0.001
+            } else {
+                exact_bound * 1.001 + 0.001
+            };
+
+            let result = float_value.validate("float_value", &Bound::Exact(exact_bound)).result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-bound-exact".into(),
+                    field: Field {
+                        name: "float_value".into(),
+                        actual: Some(Value::Float(float_value)),
+                        expected: Some(Value::Float(exact_bound)),
+                    }
+                })]
+            }));
+        }
+
+        #[test]
+        fn validate_bound_closed_range_on_a_long_value_that_is_within_bounds(
+            (lower, upper, long_value) in any::<i64>()
+                .prop_flat_map(|min| (Just(min), min..=i64::max_value()) )
+                .prop_flat_map(|(min, max)| (Just(min), Just(max), min..=max) )
+        ) {
+            let result = long_value.validate("long_value", &Bound::ClosedRange(lower, upper)).result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), long_value);
+        }
+
+        #[test]
+        fn validate_bound_closed_range_on_a_long_value_that_is_less_than_the_lower_bound(
+            (lower, upper, long_value) in (i64::min_value() + 1..=i64::max_value())
+                .prop_flat_map(|min| (Just(min), min..=i64::max_value()) )
+                .prop_flat_map(|(min, max)| (Just(min), Just(max), i64::min_value()..min) )
+        ) {
+            let result = long_value.validate("long_value", &Bound::ClosedRange(lower, upper)).result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-bound-closed-min".into(),
+                    field: Field {
+                        name: "long_value".into(),
+                        actual: Some(Value::Long(long_value)),
+                        expected: Some(Value::Long(lower)),
+                    }
+                })]
+            }))
+        }
+
+        #[test]
+        fn validate_bound_closed_range_on_a_long_value_that_is_greater_than_the_upper_bound(
+            (lower, upper, long_value) in (i64::min_value()..i64::max_value())
+                .prop_flat_map(|max| (i64::min_value()..=max, Just(max)) )
+                .prop_flat_map(|(min, max)| (Just(min), Just(max), max + 1..i64::max_value()) )
+        ) {
+            let result = long_value.validate("long_value", &Bound::ClosedRange(lower, upper)).result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-bound-closed-max".into(),
+                    field: Field {
+                        name: "long_value".into(),
+                        actual: Some(Value::Long(long_value)),
+                        expected: Some(Value::Long(upper)),
+                    }
+                })]
+            }))
+        }
+
+        #[test]
+        fn validate_bound_closedopen_range_on_a_long_value_that_is_within_bounds(
+            (lower, upper, long_value) in any::<i64>()
+                .prop_flat_map(|min| (Just(min), min..=i64::max_value()) )
+                .prop_flat_map(|(min, max)| (Just(min), Just(max), min..max) )
+        ) {
+            let result = long_value.validate("long_value", &Bound::ClosedOpenRange(lower, upper)).result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), long_value);
+        }
+
+        #[test]
+        fn validate_bound_closedopen_range_on_a_long_value_that_is_less_than_the_lower_bound(
+            (lower, upper, long_value) in (i64::min_value() + 1..=i64::max_value())
+                .prop_flat_map(|min| (Just(min), min..=i64::max_value()) )
+                .prop_flat_map(|(min, max)| (Just(min), Just(max), i64::min_value()..min) )
+        ) {
+            let result = long_value.validate("long_value", &Bound::ClosedOpenRange(lower, upper)).result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-bound-closed-min".into(),
+                    field: Field {
+                        name: "long_value".into(),
+                        actual: Some(Value::Long(long_value)),
+                        expected: Some(Value::Long(lower)),
+                    }
+                })]
+            }))
+        }
+
+        #[test]
+        fn validate_bound_closedopen_range_on_a_long_value_that_is_greater_than_or_equal_the_upper_bound(
+            (lower, upper, long_value) in (i64::min_value()..=i64::max_value())
+                .prop_flat_map(|max| (i64::min_value()..=max, Just(max)) )
+                .prop_flat_map(|(min, max)| (Just(min), Just(max), max..i64::max_value()) )
+        ) {
+            let result = long_value.validate("long_value", &Bound::ClosedOpenRange(lower, upper)).result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-bound-open-max".into(),
+                    field: Field {
+                        name: "long_value".into(),
+                        actual: Some(Value::Long(long_value)),
+                        expected: Some(Value::Long(upper)),
+                    }
+                })]
+            }))
+        }
+
+        #[test]
+        fn validate_bound_openclosed_range_on_a_long_value_that_is_within_bounds(
+            (lower, upper, long_value) in any::<i64>()
+                .prop_flat_map(|min| (Just(min), min..=i64::max_value()) )
+                .prop_flat_map(|(min, max)| (Just(min), Just(max), min + 1..=max) )
+        ) {
+            let result = long_value.validate("long_value", &Bound::OpenClosedRange(lower, upper)).result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), long_value);
+        }
+
+        #[test]
+        fn validate_bound_openclosed_range_on_a_long_value_that_is_less_than_or_equal_the_lower_bound(
+            (lower, upper, long_value) in (i64::min_value()..=i64::max_value())
+                .prop_flat_map(|min| (Just(min), min..=i64::max_value()) )
+                .prop_flat_map(|(min, max)| (Just(min), Just(max), i64::min_value()..=min) )
+        ) {
+            let result = long_value.validate("long_value", &Bound::OpenClosedRange(lower, upper)).result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-bound-open-min".into(),
+                    field: Field {
+                        name: "long_value".into(),
+                        actual: Some(Value::Long(long_value)),
+                        expected: Some(Value::Long(lower)),
+                    }
+                })]
+            }))
+        }
+
+        #[test]
+        fn validate_bound_openclosed_range_on_a_long_value_that_is_greater_than_the_upper_bound(
+            (lower, upper, long_value) in (i64::min_value()..i64::max_value())
+                .prop_flat_map(|max| (i64::min_value()..=max, Just(max)) )
+                .prop_flat_map(|(min, max)| (Just(min), Just(max), max + 1..i64::max_value()) )
+        ) {
+            let result = long_value.validate("long_value", &Bound::OpenClosedRange(lower, upper)).result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-bound-closed-max".into(),
+                    field: Field {
+                        name: "long_value".into(),
+                        actual: Some(Value::Long(long_value)),
+                        expected: Some(Value::Long(upper)),
+                    }
+                })]
+            }))
+        }
+
+        #[test]
+        fn validate_bound_open_range_on_a_long_value_that_is_within_bounds(
+            (lower, upper, long_value) in any::<i64>()
+                .prop_flat_map(|min| (Just(min), min..=i64::max_value()) )
+                .prop_flat_map(|(min, max)| (Just(min), Just(max), min + 1..max) )
+        ) {
+            let result = long_value.validate("long_value", &Bound::OpenRange(lower, upper)).result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), long_value);
+        }
+
+        #[test]
+        fn validate_bound_open_range_on_a_long_value_that_is_less_than_or_equal_the_lower_bound(
+            (lower, upper, long_value) in (i64::min_value()..=i64::max_value())
+                .prop_flat_map(|min| (Just(min), min..=i64::max_value()) )
+                .prop_flat_map(|(min, max)| (Just(min), Just(max), i64::min_value()..=min) )
+        ) {
+            let result = long_value.validate("long_value", &Bound::OpenRange(lower, upper)).result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-bound-open-min".into(),
+                    field: Field {
+                        name: "long_value".into(),
+                        actual: Some(Value::Long(long_value)),
+                        expected: Some(Value::Long(lower)),
+                    }
+                })]
+            }))
+        }
+
+        #[test]
+        fn validate_bound_open_range_on_a_long_value_that_is_greater_than_or_equal_the_upper_bound(
+            (lower, upper, long_value) in (i64::min_value()..=i64::max_value())
+                .prop_flat_map(|max| (i64::min_value()..=max, Just(max)) )
+                .prop_flat_map(|(min, max)| (Just(min), Just(max), max..i64::max_value()) )
+        ) {
+            let result = long_value.validate("long_value", &Bound::OpenRange(lower, upper)).result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-bound-open-max".into(),
+                    field: Field {
+                        name: "long_value".into(),
+                        actual: Some(Value::Long(long_value)),
+                        expected: Some(Value::Long(upper)),
+                    }
+                })]
+            }))
+        }
+    }
+}
