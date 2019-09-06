@@ -16,7 +16,7 @@ for Rust libraries in [RFC #1105](https://github.com/rust-lang/rfcs/blob/master/
 
 ### Enhancements
   
-* implement `TryFrom<usize>` and `TryFrom<isize>` for `Value`
+* implement `TryFrom<usize>` for `Value`
 
 ### Fixes
 

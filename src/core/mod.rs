@@ -626,37 +626,33 @@ where
     }
 }
 
+#[cfg(target_pointer_width = "32")]
 impl TryFrom<usize> for Value {
     type Error = &'static str;
 
     fn try_from(value: usize) -> Result<Self, Self::Error> {
-        std::panic::catch_unwind(|| {
-            if value <= i32::max_value() as usize {
-                Value::Integer(value as i32)
-            } else if value <= i64::max_value() as usize {
-                Value::Long(value as i64)
-            } else {
-                panic!("usize value too big to be converted to i64")
-            }
-        })
-        .map_err(|_| "usize value too big to be converted to i64")
+        if value <= i32::max_value() as usize {
+            Ok(Value::Integer(value as i32))
+        } else if value as u64 <= i64::max_value() as u64 {
+            Ok(Value::Long(value as i64))
+        } else {
+            Err("usize value too big to be converted to i64")
+        }
     }
 }
 
-impl TryFrom<isize> for Value {
+#[cfg(target_pointer_width = "64")]
+impl TryFrom<usize> for Value {
     type Error = &'static str;
 
-    fn try_from(value: isize) -> Result<Self, Self::Error> {
-        std::panic::catch_unwind(|| {
-            if value <= i32::max_value() as isize {
-                Value::Integer(value as i32)
-            } else if value <= i64::max_value() as isize {
-                Value::Long(value as i64)
-            } else {
-                panic!("isize value too big to be converted to i64")
-            }
-        })
-        .map_err(|_| "isize value too big to be converted to i64")
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        if value <= i32::max_value() as usize {
+            Ok(Value::Integer(value as i32))
+        } else if value <= i64::max_value() as usize {
+            Ok(Value::Long(value as i64))
+        } else {
+            Err("usize value too big to be converted to i64")
+        }
     }
 }
 

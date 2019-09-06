@@ -684,11 +684,34 @@ mod value {
             let _result = Value::try_from(value);
         }
 
+        #[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
         #[test]
-        fn try_from_isize_never_panics(
-            value in any::<isize>()
+        fn try_from_usize_value_less_than_or_equal_i32_max(
+            value in 0..=i32::max_value()
         ) {
-            let _result = Value::try_from(value);
+            let result = Value::try_from(value as usize);
+
+            prop_assert_eq!(result, Ok(Value::Integer(value)));
+        }
+
+        #[cfg(target_pointer_width = "64")]
+        #[test]
+        fn try_from_usize_value_greater_than_i32_max_and_less_than_or_equal_i64_max(
+            value in i64::from(i32::max_value()) + 1..=i64::max_value()
+        ) {
+            let result = Value::try_from(value as usize);
+
+            prop_assert_eq!(result, Ok(Value::Long(value)));
+        }
+
+        #[cfg(target_pointer_width = "64")]
+        #[test]
+        fn try_from_usize_value_greater_than_i64_max(
+            value in i64::max_value() as u64 + 1..=u64::max_value()
+        ) {
+            let result = Value::try_from(value as usize);
+
+            prop_assert_eq!(result, Err("usize value too big to be converted to i64"));
         }
     }
 }
