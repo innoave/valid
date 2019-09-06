@@ -16,6 +16,10 @@ for Rust libraries in [RFC #1105](https://github.com/rust-lang/rfcs/blob/master/
   
 * implement `TryFrom<usize>` and `TryFrom<isize>` for `Value`
 
+### Fixes
+
+* wrong error code for constraint `CharCount::MinMax` when value has too few characters
+
 
 ## 0.2.0 : 2019-09-05
 
