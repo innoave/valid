@@ -12,7 +12,7 @@ for Rust libraries in [RFC #1105](https://github.com/rust-lang/rfcs/blob/master/
 * use parameters of type `usize` instead `u32` for the constraints `Length` and `CharCount`, which
   enables an implementation that should never panic (issue #4)
   
-* rename constraint `FromTo` to `MustDefineRange`
+* rename constraint `FromTo` to `MustDefineRange` (issue #6)
 
 ### Enhancements
   
@@ -20,7 +20,7 @@ for Rust libraries in [RFC #1105](https://github.com/rust-lang/rfcs/blob/master/
 
 ### Fixes
 
-* wrong error code for constraint `CharCount::MinMax` when value has too few characters
+* wrong error code for constraint `CharCount::MinMax` when value has too few characters (issue #5)
 
 
 ## 0.2.0 : 2019-09-05
