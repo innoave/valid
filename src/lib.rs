@@ -581,6 +581,8 @@
 mod bigdecimal;
 pub mod constraint;
 mod core;
+#[cfg(feature = "num-traits")]
+mod num;
 pub mod property;
 mod std_types;
 

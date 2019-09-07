@@ -85,6 +85,7 @@ application and which dependencies you will have in your project.
   "serde1")
 * Support for widely used types of 3rd party crates through optional crate features
 * Support for `BigDecimal` of the [`bigdecimal`] crate (optional crate feature "bigdecimal")
+* Support for `BigInt` of the [`num-bigint`] crate (optional crate feature "num-bigint")
 * Support for `DateTime` and `NaiveDate` of the [`chrono`] crate (optional crate feature "chrono")
 
 ## Usage
@@ -105,6 +106,13 @@ Support for validating `BigDecimal` of the [`bigdecimal`] crate:
 [dependencies]
 valid = { version = "0.2", features = ["bigdecimal"] }
 ```
+
+Support for validating `BigInt` of the [`num-bigint`] crate:
+
+```toml
+[dependencies]
+valid = { version = "0.2", features = ["num-bigint"] }
+```
  
 Support for validating `NaiveDate` and `DateTime` of the [`chrono`] crate:
 
@@ -121,5 +129,6 @@ Theses crate features can be enabled in any combination. For detailed informatio
 [`chrono`]: https://crates.io/crates/chrono
 [`failure`]: https://crates.io/crates/failure
 [_fluent_]: https://projectfluent.org/
+[`num-bigint`]: https://crates.io/crates/num-bigint
 [`serde`]: https://crates.io/crates/serde
 [`valid`]: https://crates.io/crates/valid

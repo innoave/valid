@@ -18,6 +18,7 @@
 
 use crate::property::{
     HasCharCount, HasCheckedValue, HasDecimalDigits, HasEmptyValue, HasLength, HasMember,
+    HasZeroValue,
 };
 use crate::{
     invalid_optional_value, invalid_relation, invalid_value, FieldName, RelatedFields, Validate,
@@ -77,6 +78,9 @@ pub const INVALID_BOUND_OPEN_MAX: &str = "invalid-bound-open-max";
 /// Error code: the value is not greater than the specified minimum
 /// (`Bound::OpenRange` or `Bound::OpenClosedRange` constraint)
 pub const INVALID_BOUND_OPEN_MIN: &str = "invalid-bound-open-min";
+
+/// Error code: the value is zero (`NonZero` constraint)
+pub const INVALID_NON_ZERO: &str = "invalid-non-zero";
 
 /// Error code: the number of integer digits is not less than or equal to the
 /// specified maximum (`Digits::integer` constraint)
@@ -413,6 +417,39 @@ where
             }
         } {
             Validation::failure(vec![invalid_value(code, name, self, expected)])
+        } else {
+            Validation::success(self)
+        }
+    }
+}
+
+/// Values of zero are not allowed.
+///
+/// The validation function can be applied in the [`FieldName`] context.
+/// It is implemented for all types `T` that implement the [`HasZeroValue`]
+/// property trait.
+///
+/// [`FieldName`]: ../core/struct.FieldName.html
+/// [`HasZeroValue`]: ../property/trait.HasZeroValue.html
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NonZero;
+
+impl<T> Validate<NonZero, FieldName> for T
+where
+    T: HasZeroValue + Into<Value>,
+{
+    fn validate(
+        self,
+        name: impl Into<FieldName>,
+        _constraint: &NonZero,
+    ) -> Validation<NonZero, Self> {
+        if self.is_zero_value() {
+            Validation::failure(vec![invalid_optional_value(
+                INVALID_NON_ZERO,
+                name,
+                Some(self.into()),
+                None,
+            )])
         } else {
             Validation::success(self)
         }

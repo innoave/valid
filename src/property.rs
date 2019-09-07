@@ -53,6 +53,12 @@ pub trait HasCharCount {
     fn char_count(&self) -> usize;
 }
 
+/// Defines that a type has a zero value.
+pub trait HasZeroValue {
+    /// Returns whether this value is zero
+    fn is_zero_value(&self) -> bool;
+}
+
 /// Properties of a decimal number.
 pub trait HasDecimalDigits {
     /// Returns the number of integer digits

@@ -213,3 +213,80 @@ where
         self.contains_key(element)
     }
 }
+
+#[cfg(not(feature = "num-traits"))]
+mod num {
+    use crate::property::HasZeroValue;
+
+    impl HasZeroValue for i8 {
+        fn is_zero_value(&self) -> bool {
+            *self == 0
+        }
+    }
+
+    impl HasZeroValue for i16 {
+        fn is_zero_value(&self) -> bool {
+            *self == 0
+        }
+    }
+
+    impl HasZeroValue for i32 {
+        fn is_zero_value(&self) -> bool {
+            *self == 0
+        }
+    }
+
+    impl HasZeroValue for i64 {
+        fn is_zero_value(&self) -> bool {
+            *self == 0
+        }
+    }
+
+    impl HasZeroValue for i128 {
+        fn is_zero_value(&self) -> bool {
+            *self == 0
+        }
+    }
+
+    impl HasZeroValue for u8 {
+        fn is_zero_value(&self) -> bool {
+            *self == 0
+        }
+    }
+
+    impl HasZeroValue for u16 {
+        fn is_zero_value(&self) -> bool {
+            *self == 0
+        }
+    }
+
+    impl HasZeroValue for u32 {
+        fn is_zero_value(&self) -> bool {
+            *self == 0
+        }
+    }
+
+    impl HasZeroValue for u64 {
+        fn is_zero_value(&self) -> bool {
+            *self == 0
+        }
+    }
+
+    impl HasZeroValue for u128 {
+        fn is_zero_value(&self) -> bool {
+            *self == 0
+        }
+    }
+
+    impl HasZeroValue for isize {
+        fn is_zero_value(&self) -> bool {
+            *self == 0
+        }
+    }
+
+    impl HasZeroValue for usize {
+        fn is_zero_value(&self) -> bool {
+            *self == 0
+        }
+    }
+}

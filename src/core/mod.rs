@@ -4,6 +4,8 @@
 use bigdecimal::BigDecimal;
 #[cfg(feature = "chrono")]
 use chrono::{DateTime, NaiveDate, TimeZone, Utc};
+#[cfg(feature = "num-bigint")]
+use num_bigint::BigInt;
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -452,6 +454,7 @@ impl<C, T> Validation<C, T> {
 ///
 /// | 3rd party crate | supported type  | crate feature |
 /// |-----------------|-----------------|---------------|
+/// | [`num-bigint`]  | `BigInt`        | `num-bigint`  |
 /// | [`bigdecimal`]  | `BigDecimal`    | `bigdecimal`  |
 /// | [`chrono`]      | `NaiveDate`     | `chrono`      |
 /// | [`chrono`]      | `DateTime`      | `chrono`      |
@@ -476,6 +479,7 @@ impl<C, T> Validation<C, T> {
 /// [`ConstraintViolation`]: enum.ConstraintViolation.html
 /// [`bigdecimal`]: https://crates.io/crates/bigdecimal
 /// [`chrono`]: https://crates.io/crates/chrono
+/// [`num-bigint`]: https://crates.io/crates/num-bigint
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -500,6 +504,9 @@ pub enum Value {
     /// a value with date, time and timezone
     #[cfg(feature = "chrono")]
     DateTime(DateTime<Utc>),
+    /// a big integer value
+    #[cfg(feature = "num-bigint")]
+    BigInteger(BigInt),
 }
 
 impl Display for Value {
@@ -517,6 +524,8 @@ impl Display for Value {
             Value::Date(value) => write!(f, "{}", value),
             #[cfg(feature = "chrono")]
             Value::DateTime(value) => write!(f, "{}", value),
+            #[cfg(feature = "num-bigint")]
+            Value::BigInteger(value) => write!(f, "{}", value),
         }
     }
 }
@@ -623,6 +632,13 @@ where
 {
     fn from(value: DateTime<Z>) -> Self {
         Value::DateTime(value.with_timezone(&Utc))
+    }
+}
+
+#[cfg(feature = "num-bigint")]
+impl From<BigInt> for Value {
+    fn from(value: BigInt) -> Self {
+        Value::BigInteger(value)
     }
 }
 

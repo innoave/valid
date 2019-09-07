@@ -23,3 +23,15 @@ impl HasDecimalDigits for BigDecimal {
         }
     }
 }
+
+#[cfg(not(feature = "num-traits"))]
+mod without_num_traits {
+    use crate::property::HasZeroValue;
+    use bigdecimal::{BigDecimal, Zero};
+
+    impl HasZeroValue for BigDecimal {
+        fn is_zero_value(&self) -> bool {
+            self.is_zero()
+        }
+    }
+}

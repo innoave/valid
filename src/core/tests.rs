@@ -438,7 +438,7 @@ mod validation {
 mod value {
     use super::*;
 
-    #[cfg(not(any(feature = "bigdecimal", feature = "chrono")))]
+    #[cfg(not(any(feature = "bigdecimal", feature = "chrono", feature = "num-bigint")))]
     #[test]
     fn exhaustive_match_over_value_variants_for_default_features() {
         fn exhaustive_match(value: Value) -> i32 {
@@ -454,7 +454,11 @@ mod value {
         assert_eq!(exhaustive_match(Value::Integer(0)), 2);
     }
 
-    #[cfg(all(feature = "bigdecimal", not(feature = "chrono")))]
+    #[cfg(all(
+        feature = "bigdecimal",
+        not(feature = "chrono"),
+        not(feature = "num-bigint")
+    ))]
     #[test]
     fn exhaustive_match_over_value_variants_with_bigdecimal_feature() {
         fn exhaustive_match(value: Value) -> i32 {
@@ -471,7 +475,11 @@ mod value {
         assert_eq!(exhaustive_match(Value::Integer(0)), 2);
     }
 
-    #[cfg(all(not(feature = "bigdecimal"), feature = "chrono"))]
+    #[cfg(all(
+        not(feature = "bigdecimal"),
+        feature = "chrono",
+        not(feature = "num-bigint")
+    ))]
     #[test]
     fn exhaustive_match_over_value_variants_with_chrono_feature() {
         fn exhaustive_match(value: Value) -> i32 {
@@ -489,7 +497,28 @@ mod value {
         assert_eq!(exhaustive_match(Value::Integer(0)), 2);
     }
 
-    #[cfg(all(feature = "bigdecimal", feature = "chrono"))]
+    #[cfg(all(
+        not(feature = "bigdecimal"),
+        not(feature = "chrono"),
+        feature = "num-bigint"
+    ))]
+    #[test]
+    fn exhaustive_match_over_value_variants_with_bigdecimal_feature() {
+        fn exhaustive_match(value: Value) -> i32 {
+            match value {
+                Value::String(_) => 1,
+                Value::Integer(_) => 2,
+                Value::Long(_) => 3,
+                Value::Float(_) => 4,
+                Value::Double(_) => 5,
+                Value::Boolean(_) => 6,
+                Value::BigInteger(_) => 10,
+            }
+        }
+        assert_eq!(exhaustive_match(Value::Integer(0)), 2);
+    }
+
+    #[cfg(all(feature = "bigdecimal", feature = "chrono", feature = "num-bigint"))]
     #[test]
     fn exhaustive_match_over_value_variants_with_bigdecimal_and_chrono_features() {
         fn exhaustive_match(value: Value) -> i32 {
@@ -503,6 +532,7 @@ mod value {
                 Value::Decimal(_) => 7,
                 Value::Date(_) => 8,
                 Value::DateTime(_) => 9,
+                Value::BigInteger(_) => 10,
             }
         }
         assert_eq!(exhaustive_match(Value::Integer(0)), 2);
@@ -574,6 +604,16 @@ mod value {
         let value = Value::DateTime(Utc.ymd(2019, 8, 31).and_hms(12, 02, 59));
 
         assert_eq!(value.to_string(), "2019-08-31 12:02:59 UTC");
+    }
+
+    #[cfg(feature = "num-bigint")]
+    #[test]
+    fn display_format_a_value_of_big_integer() {
+        use std::str::FromStr;
+
+        let value = Value::BigInteger(BigInt::from_str("128077101").unwrap());
+
+        assert_eq!(value.to_string(), "128077101");
     }
 
     proptest! {
