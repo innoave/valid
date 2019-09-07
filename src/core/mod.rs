@@ -452,12 +452,12 @@ impl<C, T> Validation<C, T> {
 /// Important types of 3rd party crates are supported through optional crate
 /// features:
 ///
-/// | 3rd party crate | supported type  | crate feature |
-/// |-----------------|-----------------|---------------|
-/// | [`num-bigint`]  | `BigInt`        | `num-bigint`  |
-/// | [`bigdecimal`]  | `BigDecimal`    | `bigdecimal`  |
-/// | [`chrono`]      | `NaiveDate`     | `chrono`      |
-/// | [`chrono`]      | `DateTime`      | `chrono`      |
+/// | supported type | crate feature | 3rd party crate |
+/// |----------------|---------------|-----------------|
+/// | `BigInt`       | `num-bigint`  | [`num-bigint`]  |
+/// | `BigDecimal`   | `bigdecimal`  | [`bigdecimal`]  |
+/// | `NaiveDate`    | `chrono`      | [`chrono`]      |
+/// | `DateTime`     | `chrono`      | [`chrono`]      |
 ///
 /// The `From` trait is implemented for the underlying types. Additionally
 /// there are implementations of the `From` trait for the primitive types `i8`,
