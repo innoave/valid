@@ -1,26 +1,29 @@
 language: rust
-sudo: required
-dist: trusty
-addons:
-  apt:
-    packages:
-      - libssl-dev
-cache: cargo
-
-rust:
- # - 1.35.0
- # - stable
-  - beta
- # - nightly
 
 matrix:
   allow_failures:
     - rust: nightly
   fast_finish: true
 
+  include:
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          packages:
+            - libssl-dev
+    - os: windows
+
+    - rust: stable
+    - rust: beta
+    - rust: nightly
+    - rust: 1.35.0
+
+cache: cargo
+
 before_cache: |
   rm -rf "$TRAVIS_HOME/.cargo/registry/src"
-  if [[ "$TRAVIS_RUST_VERSION" == beta ]]; then
+  if [[ "$TRAVIS_RUST_VERSION" == beta && "$TRAVIS_OS_NAME" == "linux" ]]; then
     cargo install cargo-tarpaulin -f
   fi
 
@@ -34,7 +37,7 @@ script:
   - cargo test --features "regex" --verbose
 
 after_success: |
-  if [[ "$TRAVIS_RUST_VERSION" == beta ]]; then
+  if [[ "$TRAVIS_RUST_VERSION" == beta && "$TRAVIS_OS_NAME" == "linux" ]]; then
     cargo tarpaulin --out Xml --all-features --ignore-tests --verbose
     bash <(curl -s https://codecov.io/bash)
   fi
