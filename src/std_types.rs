@@ -215,7 +215,7 @@ where
 }
 
 #[cfg(not(feature = "num-traits"))]
-mod num {
+mod without_num_traits {
     use crate::property::HasZeroValue;
 
     impl HasZeroValue for i8 {

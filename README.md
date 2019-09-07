@@ -89,40 +89,32 @@ application and which dependencies you will have in your project.
 * Support for `DateTime` and `NaiveDate` of the [`chrono`] crate (optional crate feature "chrono")
 
 ## Usage
+ 
+For detailed information on how to use [`valid`] including lots of examples see the
+[API documentation at docs.rs](https://docs.rs/valid).
 
-`valid` provides some of its functionality as optional crate features. To use it we must enable the 
-relevant crate feature in our `Cargo.toml` file.
+`valid` provides some of its functionality as optional crate features. Some features enable support
+for validating a type that is provided by this crate. Other features enable the implementation of
+additional constraints. To use any optional functionality we must enable the relevant crate feature
+in our `Cargo.toml` file. All crate features can be enabled in any combination.
 
-Serialization and deserialization of `ValdiationError` through the [`serde`] crate:
+Here is an overview of all crate features:
+
+| crate feature | supported types         | enabled constraints |
+|---------------|-------------------------|---------------------|
+| `bigint`      | `BigInt`                |                     |
+| `bigdecimal`  | `BigDecimal`            |                     |
+| `chrono`      | `DateTime`, `NaiveDate` |                     |
+| `regex`       |                         | `Pattern`           | 
+
+Additionally the "serde1" feature enables serialization and deserialization of `ValdiationError` 
+using the [`serde`] crate:
 
 ```toml
 [dependencies]
 valid = { version = "0.2", features = ["serde1"] }
 ```
 
-Support for validating `BigDecimal` of the [`bigdecimal`] crate:
-
-```toml
-[dependencies]
-valid = { version = "0.2", features = ["bigdecimal"] }
-```
-
-Support for validating `BigInt` of the [`num-bigint`] crate:
-
-```toml
-[dependencies]
-valid = { version = "0.2", features = ["num-bigint"] }
-```
- 
-Support for validating `NaiveDate` and `DateTime` of the [`chrono`] crate:
-
-```toml
-[dependencies]
-valid = { version = "0.2", features = ["chrono"] }
-```
- 
-Theses crate features can be enabled in any combination. For detailed information on how to use
-[`valid`] see the [API documentation at docs.rs](https://docs.rs/valid).
 
 [rust]: https://rust-lang.org
 [`bigdecimal`]: https://crates.io/crates/bigdecimal
