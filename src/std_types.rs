@@ -289,4 +289,16 @@ mod num {
             *self == 0
         }
     }
+
+    impl HasZeroValue for f32 {
+        fn is_zero_value(&self) -> bool {
+            *self == 0.
+        }
+    }
+
+    impl HasZeroValue for f64 {
+        fn is_zero_value(&self) -> bool {
+            *self == 0.
+        }
+    }
 }
