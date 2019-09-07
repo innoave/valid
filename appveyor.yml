@@ -53,7 +53,9 @@ build: false
 # directly or perform other testing commands. Rust will automatically be placed in the PATH
 # environment variable.
 test_script:
+  - cargo build --verbose %cargoflags%
   - cargo test --verbose %cargoflags%
+  - cargo build --all-features --verbose %cargoflags%
   - cargo test --all-features --verbose %cargoflags%
   - cargo test --features "serde1" --verbose %cargoflags%
   - cargo test --features "bigint" --verbose %cargoflags%

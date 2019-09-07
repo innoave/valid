@@ -30,7 +30,9 @@ before_cache: |
   fi
 
 script:
+  - cargo build --verbose
   - cargo test --verbose
+  - cargo build --all-features --verbose
   - cargo test --all-features --verbose
   - cargo test --features "serde1" --verbose
   - cargo test --features "bigint" --verbose
