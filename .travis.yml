@@ -26,13 +26,9 @@ script:
   - cargo test --verbose
   - cargo test --all-features --verbose
   - cargo test --features "serde1" --verbose
-  - cargo test --features "num-traits" --verbose
+  - cargo test --features "bigint" --verbose
   - cargo test --features "bigdecimal" --verbose
-  - cargo test --features "bigdecimal serde1" --verbose
   - cargo test --features "chrono" --verbose
-  - cargo test --features "chrono serde1" --verbose
-  - cargo test --features "num-bigint" --verbose
-  - cargo test --features "num-bigint serde1" --verbose
 
 after_success: |
   if [[ "$TRAVIS_RUST_VERSION" == beta ]]; then

@@ -56,10 +56,6 @@ test_script:
   - cargo test --verbose %cargoflags%
   - cargo test --all-features --verbose %cargoflags%
   - cargo test --features "serde1" --verbose %cargoflags%
-  - cargo test --features "num-traits" --verbose %cargoflags%
+  - cargo test --features "bigint" --verbose %cargoflags%
   - cargo test --features "bigdecimal" --verbose %cargoflags%
-  - cargo test --features "bigdecimal serde1" --verbose %cargoflags%
   - cargo test --features "chrono" --verbose %cargoflags%
-  - cargo test --features "chrono serde1" --verbose %cargoflags%
-  - cargo test --features "num-bigint" --verbose %cargoflags%
-  - cargo test --features "num-bigint serde1" --verbose %cargoflags%
