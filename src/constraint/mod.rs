@@ -103,10 +103,12 @@ pub const INVALID_MUST_DEFINE_RANGE_EXCLUSIVE: &str = "invalid-must-define-range
 
 /// The value must be true.
 ///
-/// The validation function can be applied in the
-/// [`FieldName`](../core/struct.FieldName.html) context.
-/// It is implemented for all types `T` that implement the
-/// [`IsChecked`](../property/trait.IsChecked.html) property trait.
+/// The validation function can be applied in the [`FieldName`] context.
+/// It is implemented for all types `T` that implement the [`HasCheckedValue`]
+/// property trait.
+///
+/// [`FieldName`]: ../core/struct.FieldName.html
+/// [`HasCheckedValue`]: ../property/trait.HasCheckedValue.html
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AssertTrue;
 
@@ -129,10 +131,12 @@ where
 
 /// The value must be false.
 ///
-/// The validation function can be applied in the
-/// [`FieldName`](../core/struct.FieldName.html) context.
-/// It is implemented for all types `T` that implement the
-/// [`IsChecked`](../property/trait.IsChecked.html) property trait.
+/// The validation function can be applied in the [`FieldName`] context.
+/// It is implemented for all types `T` that implement the [`HasCheckedValue`]
+/// property trait.
+///
+/// [`FieldName`]: ../core/struct.FieldName.html
+/// [`HasCheckedValue`]: ../property/trait.HasCheckedValue.html
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AssertFalse;
 
@@ -155,10 +159,12 @@ where
 
 /// The value must not be empty.
 ///
-/// The validation function can be applied in the
-/// [`FieldName`](../core/struct.FieldName.html) context.
-/// It is implemented for all types `T` that implement the
-/// [`IsEmptyValue`](../property/trait.IsEmptyValue.html) property trait.
+/// The validation function can be applied in the [`FieldName`] context.
+/// It is implemented for all types `T` that implement the [`HasEmptyValue`]
+/// property trait.
+///
+/// [`FieldName`]: ../core/struct.FieldName.html
+/// [`HasEmptyValue`]: ../property/trait.HasEmptyValue.html
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NotEmpty;
 
@@ -186,10 +192,12 @@ where
 
 /// The length of a value must be within some bounds.
 ///
-/// The validation function can be applied in the
-/// [`FieldName`](../core/struct.FieldName.html) context.
-/// It is implemented for all types `T` that implement the
-/// [`HasLength`](../property/trait.HasLength.html) property trait.
+/// The validation function can be applied in the [`FieldName`] context.
+/// It is implemented for all types `T` that implement the [`HasLength`]
+/// property trait.
+///
+/// [`FieldName`]: ../core/struct.FieldName.html
+/// [`HasLength`]: ../property/trait.HasLength.html
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Length {
     /// The length of the value must be less than or equal to the specified
@@ -254,10 +262,12 @@ where
 
 /// The number of characters must be within some bounds.
 ///
-/// The validation function can be applied in the
-/// [`FieldName`](../core/struct.FieldName.html) context.
-/// It is implemented for all types `T` that implement the
-/// [`HasCharCount`](../property/trait.HasCharCount.html) property trait.
+/// The validation function can be applied in the [`FieldName`] context.
+/// It is implemented for all types `T` that implement the [`HasCharCount`]
+/// property trait.
+///
+/// [`FieldName`]: ../core/struct.FieldName.html
+/// [`HasCharCount`]: ../property/trait.HasCharCount.html
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CharCount {
     /// The number of characters must be less than or equal to the specified
@@ -326,9 +336,10 @@ where
 
 /// The value must be within some bounds.
 ///
-/// The validation function can be applied in the
-/// [`FieldName`](../core/struct.FieldName.html) context.
+/// The validation function can be applied in the [`FieldName`] context.
 /// It is implemented for all types `T` that implement the `PartialOrd` trait.
+///
+/// [`FieldName`]: ../core/struct.FieldName.html
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Bound<T> {
     /// The value must be between the specified minimum (inclusive) and
@@ -410,10 +421,12 @@ where
 
 /// Maximum number of allowed integer digits and fraction digits.
 ///
-/// The validation function can be applied in the
-/// [`FieldName`](../core/struct.FieldName.html) context.
-/// It is implemented for all types `T` that implement the
-/// [`DecimalDigits`](../property/trait.DecimalDigits.html) property trait.
+/// The validation function can be applied in the [`FieldName`] context.
+/// It is implemented for all types `T` that implement the [`HasDecimalDigits`]
+/// property trait.
+///
+/// [`FieldName`]: ../core/struct.FieldName.html
+/// [`HasDecimalDigits`]: ../property/trait.HasDecimalDigits.html
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Digits {
     /// Maximum number of allowed integer digits (digits to the left of the
@@ -467,10 +480,12 @@ where
 /// The value must contain the specified member or the specified member must be
 /// part of the value.
 ///
-/// The validation function can be applied in the
-/// [`FieldName`](../core/struct.FieldName.html) context.
-/// It is implemented for all types `T` that implement the
-/// [`HasMember`](../property/trait.HasMember.html) property trait.
+/// The validation function can be applied in the [`FieldName`] context.
+/// It is implemented for all types `T` that implement the [`HasMember`]
+/// property trait.
+///
+/// [`FieldName`]: ../core/struct.FieldName.html
+/// [`HasMember`]: ../property/trait.HasMember.html
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Contains<'a, A>(pub &'a A);
 
@@ -499,9 +514,10 @@ where
 
 /// Two related fields must be equal.
 ///
-/// The validation function can be applied in the
-/// [`RelatedFields`](../core/struct.RelatedFields.html) context.
-/// It is implemented for all types `T` that implement the `Eq` trait.
+/// The validation function can be applied in the [`RelatedFields`] context.
+/// It is implemented for all types `T` that implement the `PartialEq` trait.
+///
+/// [`RelatedFields`]: ../core/struct.RelatedFields.html
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MustMatch;
 
@@ -535,9 +551,10 @@ where
 /// range such as `valid_from` and `valid_until` or `min_salary` and
 /// `max_salary`.
 ///
-/// The validation function can be applied in the
-/// [`RelatedFields`](../core/struct.RelatedFields.html) context.
+/// The validation function can be applied in the [`RelatedFields`] context.
 /// It is implemented for all types `T` that implement the `PartialOrd` trait.
+///
+/// [`RelatedFields`]: ../core/struct.RelatedFields.html
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MustDefineRange {
     /// The first value must be less than or equal to the second value
