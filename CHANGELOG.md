@@ -17,8 +17,9 @@ for Rust libraries in [RFC #1105](https://github.com/rust-lang/rfcs/blob/master/
   
 * implement `TryFrom<usize>` for `Value`
 * add new constraint `NonZero` implemented for all primitive integer and float types as well as for
-  all types that implement the `Zero` trait of the `num-traits` crate.
+  all types that implement the `Zero` trait of the `num-traits` crate
 * add support for validating `BigInt` values of the `num-bigint` crate
+* add new `Pattern` constraint which is implemented using the `regex` crate (optional crate feature)
 
 ### Fixes
 

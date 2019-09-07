@@ -29,6 +29,7 @@ script:
   - cargo test --features "bigint" --verbose
   - cargo test --features "bigdecimal" --verbose
   - cargo test --features "chrono" --verbose
+  - cargo test --features "regex" --verbose
 
 after_success: |
   if [[ "$TRAVIS_RUST_VERSION" == beta ]]; then

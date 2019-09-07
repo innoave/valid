@@ -59,3 +59,4 @@ test_script:
   - cargo test --features "bigint" --verbose %cargoflags%
   - cargo test --features "bigdecimal" --verbose %cargoflags%
   - cargo test --features "chrono" --verbose %cargoflags%
+  - cargo test --features "regex" --verbose %cargoflags%

@@ -341,7 +341,8 @@ where
 /// The value must be within some bounds.
 ///
 /// The validation function can be applied in the [`FieldName`] context.
-/// It is implemented for all types `T` that implement the `PartialOrd` trait.
+/// It is implemented for all types `T` that implement the `PartialOrd` trait
+/// and `Into<Value>`.
 ///
 /// [`FieldName`]: ../core/struct.FieldName.html
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -427,7 +428,7 @@ where
 ///
 /// The validation function can be applied in the [`FieldName`] context.
 /// It is implemented for all types `T` that implement the [`HasZeroValue`]
-/// property trait.
+/// property trait and `Into<Value>`.
 ///
 /// [`FieldName`]: ../core/struct.FieldName.html
 /// [`HasZeroValue`]: ../property/trait.HasZeroValue.html
@@ -519,7 +520,7 @@ where
 ///
 /// The validation function can be applied in the [`FieldName`] context.
 /// It is implemented for all types `T` that implement the [`HasMember`]
-/// property trait.
+/// property trait and `Into<Value>`.
 ///
 /// [`FieldName`]: ../core/struct.FieldName.html
 /// [`HasMember`]: ../property/trait.HasMember.html
@@ -589,7 +590,8 @@ where
 /// `max_salary`.
 ///
 /// The validation function can be applied in the [`RelatedFields`] context.
-/// It is implemented for all types `T` that implement the `PartialOrd` trait.
+/// It is implemented for all types `T` that implement the `PartialOrd` trait
+/// and `Into<Value`.
 ///
 /// [`RelatedFields`]: ../core/struct.RelatedFields.html
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -636,6 +638,47 @@ where
                         self.1,
                     )])
                 }
+            }
+        }
+    }
+}
+
+#[cfg(feature = "regex")]
+pub use with_regex::*;
+
+#[cfg(feature = "regex")]
+mod with_regex {
+    use crate::{invalid_value, FieldName, Validate, Validation};
+    use regex::Regex;
+
+    /// Error code: the value does not match the specified pattern
+    /// (`Pattern` constraint)
+    pub const INVALID_PATTERN: &str = "invalid-pattern";
+
+    /// The value must match some regular expression.
+    ///
+    /// The validation function can be applied in the [`FieldName`] context.
+    /// It is implemented for `String`.
+    ///
+    /// [`FieldName`]: ../core/struct.FieldName.html
+    #[derive(Debug, Clone)]
+    pub struct Pattern(pub Regex);
+
+    impl Validate<Pattern, FieldName> for String {
+        fn validate(
+            self,
+            name: impl Into<FieldName>,
+            constraint: &Pattern,
+        ) -> Validation<Pattern, Self> {
+            if constraint.0.is_match(&self) {
+                Validation::success(self)
+            } else {
+                Validation::failure(vec![invalid_value(
+                    INVALID_PATTERN,
+                    name,
+                    self,
+                    constraint.0.to_string(),
+                )])
             }
         }
     }
