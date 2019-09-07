@@ -8,16 +8,18 @@ addons:
 cache: cargo
 
 rust:
-  - 1.35.0
-  - stable
+ # - 1.35.0
+ # - stable
   - beta
-  - nightly
+ # - nightly
 
 matrix:
   allow_failures:
     - rust: nightly
+  fast_finish: true
 
 before_cache: |
+  rm -rf "$TRAVIS_HOME/.cargo/registry/src"
   if [[ "$TRAVIS_RUST_VERSION" == beta ]]; then
     cargo install cargo-tarpaulin -f
   fi
