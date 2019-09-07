@@ -1,23 +1,25 @@
 language: rust
 
+rust:
+  - stable
+  - beta
+  - nightly
+  - 1.35.0
+
+os:
+  - linux
+  - windows
+
+dist: trusty
+addons:
+  apt:
+    packages:
+      - libssl-dev
+
 matrix:
   allow_failures:
     - rust: nightly
   fast_finish: true
-
-  include:
-    - os: linux
-      dist: trusty
-      addons:
-        apt:
-          packages:
-            - libssl-dev
-    - os: windows
-
-    - rust: stable
-    - rust: beta
-    - rust: nightly
-    - rust: 1.35.0
 
 cache: cargo
 
