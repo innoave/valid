@@ -904,3 +904,140 @@ mod bound {
         }
     }
 }
+
+#[cfg(feature = "bigdecimal")]
+mod digits {
+    use super::*;
+
+    #[test]
+    fn validate_digits_of_bigdecimal_that_is_compliant() {
+        use bigdecimal::BigDecimal;
+        use std::str::FromStr;
+
+        let account_balance = BigDecimal::from_str("12345678.99").unwrap();
+
+        let result = account_balance
+            .validate(
+                "account_balance",
+                &Digits {
+                    integer: 8,
+                    fraction: 2,
+                },
+            )
+            .result();
+
+        assert_eq!(
+            result.unwrap().unwrap(),
+            BigDecimal::from_str("12345678.99").unwrap()
+        );
+    }
+
+    #[test]
+    fn validate_digits_of_bigdecimal_with_too_many_integer_digits() {
+        use bigdecimal::BigDecimal;
+        use std::str::FromStr;
+
+        let account_balance = BigDecimal::from_str("123456780.99").unwrap();
+
+        let result = account_balance
+            .validate(
+                "account_balance",
+                &Digits {
+                    integer: 8,
+                    fraction: 2,
+                },
+            )
+            .result();
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-digits-integer".into(),
+                    field: Field {
+                        name: "account_balance".into(),
+                        actual: Some(Value::Long(9)),
+                        expected: Some(Value::Long(8)),
+                    }
+                })]
+            })
+        );
+    }
+
+    #[test]
+    fn validate_digits_of_bigdecimal_with_too_many_fraction_digits() {
+        use bigdecimal::BigDecimal;
+        use std::str::FromStr;
+
+        let account_balance = BigDecimal::from_str("12345678.995").unwrap();
+
+        let result = account_balance
+            .validate(
+                "account_balance",
+                &Digits {
+                    integer: 8,
+                    fraction: 2,
+                },
+            )
+            .result();
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-digits-fraction".into(),
+                    field: Field {
+                        name: "account_balance".into(),
+                        actual: Some(Value::Long(3)),
+                        expected: Some(Value::Long(2)),
+                    }
+                })]
+            })
+        );
+    }
+
+    #[test]
+    fn validate_digits_of_bigdecimal_with_too_many_integer_and_fraction_digits() {
+        use bigdecimal::BigDecimal;
+        use std::str::FromStr;
+
+        let account_balance = BigDecimal::from_str("123456780.995").unwrap();
+
+        let result = account_balance
+            .validate(
+                "account_balance",
+                &Digits {
+                    integer: 8,
+                    fraction: 2,
+                },
+            )
+            .result();
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: None,
+                violations: vec![
+                    ConstraintViolation::Field(InvalidValue {
+                        code: "invalid-digits-integer".into(),
+                        field: Field {
+                            name: "account_balance".into(),
+                            actual: Some(Value::Long(9)),
+                            expected: Some(Value::Long(8)),
+                        }
+                    }),
+                    ConstraintViolation::Field(InvalidValue {
+                        code: "invalid-digits-fraction".into(),
+                        field: Field {
+                            name: "account_balance".into(),
+                            actual: Some(Value::Long(3)),
+                            expected: Some(Value::Long(2)),
+                        }
+                    })
+                ]
+            })
+        );
+    }
+}
