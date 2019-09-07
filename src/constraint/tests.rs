@@ -906,14 +906,13 @@ mod bound {
 }
 
 #[cfg(feature = "bigdecimal")]
-mod digits {
+mod digits_bigdecimal {
     use super::*;
+    use bigdecimal::BigDecimal;
+    use std::str::FromStr;
 
     #[test]
     fn validate_digits_of_bigdecimal_that_is_compliant() {
-        use bigdecimal::BigDecimal;
-        use std::str::FromStr;
-
         let account_balance = BigDecimal::from_str("12345678.99").unwrap();
 
         let result = account_balance
@@ -934,9 +933,6 @@ mod digits {
 
     #[test]
     fn validate_digits_of_bigdecimal_with_too_many_integer_digits() {
-        use bigdecimal::BigDecimal;
-        use std::str::FromStr;
-
         let account_balance = BigDecimal::from_str("123456780.99").unwrap();
 
         let result = account_balance
@@ -967,9 +963,6 @@ mod digits {
 
     #[test]
     fn validate_digits_of_bigdecimal_with_too_many_fraction_digits() {
-        use bigdecimal::BigDecimal;
-        use std::str::FromStr;
-
         let account_balance = BigDecimal::from_str("12345678.995").unwrap();
 
         let result = account_balance
@@ -1000,9 +993,6 @@ mod digits {
 
     #[test]
     fn validate_digits_of_bigdecimal_with_too_many_integer_and_fraction_digits() {
-        use bigdecimal::BigDecimal;
-        use std::str::FromStr;
-
         let account_balance = BigDecimal::from_str("123456780.995").unwrap();
 
         let result = account_balance
@@ -1039,5 +1029,94 @@ mod digits {
                 ]
             })
         );
+    }
+}
+
+mod must_match {
+    use super::*;
+    use crate::InvalidRelation;
+
+    proptest! {
+        #[test]
+        fn validate_must_match_of_two_equal_strings(
+            input in "\\PC*"
+        ) {
+            let password = input.clone();
+            let repeated = input.clone();
+
+            let result = (password, repeated).validate(("password", "repeated"), &MustMatch).result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), (input.clone(), input));
+        }
+
+        #[test]
+        fn validate_must_match_of_two_strings_that_are_not_equal(
+            input in "\\PC*",
+            diff in "\\PC+",
+        ) {
+            let password = input.clone();
+            let repeated = input.clone() + &diff;
+
+            let result = (password, repeated).validate(("password", "repeated"), &MustMatch).result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Relation(InvalidRelation {
+                    code: "invalid-must-match".into(),
+                    field1: Field {
+                        name: "password".into(),
+                        actual: Some(Value::String(input.clone())),
+                        expected: None,
+                    },
+                    field2: Field {
+                        name: "repeated".into(),
+                        actual: Some(Value::String(input.clone() + &diff)),
+                        expected: None,
+                    },
+                })]
+
+            }));
+        }
+
+        #[test]
+        fn validate_must_match_of_two_equal_integer(
+            input in any::<i32>()
+        ) {
+            let code1 = input;
+            let code2 = input;
+
+            let result = (code1, code2).validate(("code1", "code2"), &MustMatch).result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), (input, input));
+        }
+
+        #[test]
+        fn validate_must_match_of_two_different_integer(
+            input in any::<i32>(),
+            diff in any::<i32>(),
+        ) {
+            let code1 = input / 2;
+            let code2 = input / 2 + diff / 2;
+
+            let result = (code1, code2).validate(("code1", "code2"), &MustMatch).result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Relation(InvalidRelation {
+                    code: "invalid-must-match".into(),
+                    field1: Field {
+                        name: "code1".into(),
+                        actual: Some(Value::Integer(code1)),
+                        expected: None,
+                    },
+                    field2: Field {
+                        name: "code2".into(),
+                        actual: Some(Value::Integer(code2)),
+                        expected: None,
+                    },
+                })]
+
+            }));
+        }
     }
 }
