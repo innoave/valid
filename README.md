@@ -93,6 +93,13 @@ application and which dependencies you will have in your project.
 For detailed information on how to use [`valid`] including lots of examples see the
 [API documentation at docs.rs](https://docs.rs/valid).
 
+To use `valid` we add it as a dependency to our `Cargo.toml` file:
+
+```toml
+[dependencies]
+valid = "0.3"
+```
+
 `valid` provides some of its functionality as optional crate features. Some features enable support
 for validating a type that is provided by this crate. Other features enable the implementation of
 additional constraints. To use any optional functionality we must enable the relevant crate feature
@@ -112,7 +119,7 @@ using the [`serde`] crate:
 
 ```toml
 [dependencies]
-valid = { version = "0.2", features = ["serde1"] }
+valid = { version = "0.3", features = ["serde1"] }
 ```
 
 
