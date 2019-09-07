@@ -1120,3 +1120,219 @@ mod must_match {
         }
     }
 }
+
+mod must_define_range {
+    use super::*;
+    use crate::InvalidRelation;
+
+    proptest! {
+        #[test]
+        fn validate_must_define_range_inclusive_for_two_integer_that_are_compliant(
+            (value1, value2) in (i32::min_value()..=i32::max_value())
+                .prop_flat_map(|val| (Just(val), val..=i32::max_value()) ),
+        ) {
+            let result = (value1, value2)
+                .validate(
+                    ("value1", "value2"),
+                    &MustDefineRange::Inclusive,
+                )
+                .result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), (value1, value2));
+        }
+
+        #[test]
+        fn validate_must_define_range_inclusive_for_two_integer_that_are_not_compliant(
+            (value2, value1) in (i32::min_value()..i32::max_value())
+                .prop_flat_map(|val| (Just(val), val + 1..=i32::max_value()) ),
+        ) {
+            let result = (value1, value2)
+                .validate(
+                    ("value1", "value2"),
+                    &MustDefineRange::Inclusive,
+                )
+                .result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Relation(InvalidRelation {
+                    code: "invalid-must-define-range-inclusive".into(),
+                    field1: Field {
+                        name: "value1".into(),
+                        actual: Some(Value::Integer(value1)),
+                        expected: None,
+                    },
+                    field2: Field {
+                        name: "value2".into(),
+                        actual: Some(Value::Integer(value2)),
+                        expected: None,
+                    },
+                })]
+
+            }));
+        }
+
+        #[test]
+        fn validate_must_define_range_exclusive_for_two_integer_that_are_compliant(
+            (value1, value2) in (i32::min_value()..i32::max_value())
+                .prop_flat_map(|val| (Just(val), val + 1..=i32::max_value()) ),
+        ) {
+            let result = (value1, value2)
+                .validate(
+                    ("value1", "value2"),
+                    &MustDefineRange::Exclusive,
+                )
+                .result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), (value1, value2));
+        }
+
+        #[test]
+        fn validate_must_define_range_exclusive_for_two_integer_that_are_not_compliant(
+            (value2, value1) in (i32::min_value()..=i32::max_value())
+                .prop_flat_map(|val| (Just(val), val..=i32::max_value()) ),
+        ) {
+            let result = (value1, value2)
+                .validate(
+                    ("value1", "value2"),
+                    &MustDefineRange::Exclusive,
+                )
+                .result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Relation(InvalidRelation {
+                    code: "invalid-must-define-range-exclusive".into(),
+                    field1: Field {
+                        name: "value1".into(),
+                        actual: Some(Value::Integer(value1)),
+                        expected: None,
+                    },
+                    field2: Field {
+                        name: "value2".into(),
+                        actual: Some(Value::Integer(value2)),
+                        expected: None,
+                    },
+                })]
+
+            }));
+        }
+    }
+}
+
+#[cfg(feature = "chrono")]
+mod must_define_range_naive_date {
+    use super::*;
+    use crate::InvalidRelation;
+    use chrono::NaiveDate;
+
+    proptest! {
+        #[test]
+        fn validate_must_define_range_inclusive_for_two_naive_dates_that_are_compliant(
+            year in 1i32..=9999,
+            month in 1u32..=12,
+            (day1, day2) in (1u32..=28).prop_flat_map(|day| (Just(day), day..=28) ),
+        ) {
+            let valid_from = NaiveDate::from_ymd(year, month, day1);
+            let valid_until = NaiveDate::from_ymd(year, month, day2);
+
+            let result = (valid_from, valid_until)
+                .validate(
+                    ("valid_from", "valid_until"),
+                    &MustDefineRange::Inclusive,
+                )
+                .result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), (valid_from, valid_until));
+        }
+
+        #[test]
+        fn validate_must_define_range_inclusive_for_two_naive_dates_that_are_not_compliant(
+            year in 1i32..=9999,
+            month in 1u32..=12,
+            (day2, day1) in (1u32..28).prop_flat_map(|day| (Just(day), day + 1..=28) ),
+        ) {
+            let valid_from = NaiveDate::from_ymd(year, month, day1);
+            let valid_until = NaiveDate::from_ymd(year, month, day2);
+
+            let result = (valid_from, valid_until)
+                .validate(
+                    ("valid_from", "valid_until"),
+                    &MustDefineRange::Inclusive,
+                )
+                .result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Relation(InvalidRelation {
+                    code: "invalid-must-define-range-inclusive".into(),
+                    field1: Field {
+                        name: "valid_from".into(),
+                        actual: Some(Value::Date(valid_from)),
+                        expected: None,
+                    },
+                    field2: Field {
+                        name: "valid_until".into(),
+                        actual: Some(Value::Date(valid_until)),
+                        expected: None,
+                    },
+                })]
+
+            }));
+        }
+
+        #[test]
+        fn validate_must_define_range_exclusive_for_two_naive_dates_that_are_compliant(
+            year in 1i32..=9999,
+            month in 1u32..=12,
+            (day1, day2) in (1u32..28).prop_flat_map(|day| (Just(day), day + 1..=28) ),
+        ) {
+            let valid_from = NaiveDate::from_ymd(year, month, day1);
+            let valid_until = NaiveDate::from_ymd(year, month, day2);
+
+            let result = (valid_from, valid_until)
+                .validate(
+                    ("valid_from", "valid_until"),
+                    &MustDefineRange::Exclusive,
+                )
+                .result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), (valid_from, valid_until));
+        }
+
+        #[test]
+        fn validate_must_define_range_exclusive_for_two_naive_dates_that_are_not_compliant(
+            year in 1i32..=9999,
+            month in 1u32..=12,
+            (day2, day1) in (1u32..=28).prop_flat_map(|day| (Just(day), day..=28) ),
+        ) {
+            let valid_from = NaiveDate::from_ymd(year, month, day1);
+            let valid_until = NaiveDate::from_ymd(year, month, day2);
+
+            let result = (valid_from, valid_until)
+                .validate(
+                    ("valid_from", "valid_until"),
+                    &MustDefineRange::Exclusive,
+                )
+                .result();
+
+            prop_assert_eq!(result, Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Relation(InvalidRelation {
+                    code: "invalid-must-define-range-exclusive".into(),
+                    field1: Field {
+                        name: "valid_from".into(),
+                        actual: Some(Value::Date(valid_from)),
+                        expected: None,
+                    },
+                    field2: Field {
+                        name: "valid_until".into(),
+                        actual: Some(Value::Date(valid_until)),
+                        expected: None,
+                    },
+                })]
+
+            }));
+        }
+    }
+}
