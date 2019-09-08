@@ -905,6 +905,43 @@ mod bound {
     }
 }
 
+mod non_zero {
+    use super::*;
+
+    #[test]
+    fn validate_non_zero_on_a_double_that_is_zero() {
+        let field_value = 0f64;
+
+        let result = field_value.validate("field_value", &NonZero).result();
+
+        assert_eq!(
+            result,
+            Err(ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-non-zero".into(),
+                    field: Field {
+                        name: "field_value".into(),
+                        actual: Some(Value::Double(field_value)),
+                        expected: None,
+                    }
+                })]
+            })
+        )
+    }
+
+    proptest! {
+        #[test]
+        fn validate_non_zeor_on_a_double_that_is_not_zero(
+            field_value in any::<f64>().prop_filter("non zero values", |v| *v != 0.)
+        ) {
+            let result = field_value.validate("field_value", &NonZero).result();
+
+            prop_assert_eq!(result.unwrap().unwrap(), field_value);
+        }
+    }
+}
+
 #[cfg(feature = "bigdecimal")]
 mod digits_bigdecimal {
     use super::*;
