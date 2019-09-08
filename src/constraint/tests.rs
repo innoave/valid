@@ -1336,3 +1336,54 @@ mod must_define_range_naive_date {
         }
     }
 }
+
+#[cfg(feature = "regex")]
+mod pattern {
+    use super::*;
+    use regex::Regex;
+
+    #[test]
+    fn validate_pattern_on_a_compliant_string() {
+        let email_address = "jane.doe@email.net".to_string();
+
+        let basic_email_pattern = Pattern(
+            Regex::new(r#"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#).expect("valid regex"),
+        );
+
+        let result = email_address
+            .validate("email_address", &basic_email_pattern)
+            .result();
+
+        assert_eq!(result.unwrap().unwrap(), "jane.doe@email.net");
+    }
+
+    #[test]
+    fn validate_pattern_on_a_not_compliant_string() {
+        let email_address = "jane*doe@email.net".to_string();
+
+        let basic_email_pattern = Pattern(
+            Regex::new(r#"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#).expect("valid regex"),
+        );
+
+        let result = email_address
+            .validate("email_address", &basic_email_pattern)
+            .result();
+
+        assert_eq!(
+            result.unwrap_err(),
+            ValidationError {
+                message: None,
+                violations: vec![ConstraintViolation::Field(InvalidValue {
+                    code: "invalid-pattern".into(),
+                    field: Field {
+                        name: "email_address".into(),
+                        actual: Some(Value::String("jane*doe@email.net".into())),
+                        expected: Some(Value::String(
+                            r#"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#.into()
+                        )),
+                    }
+                })]
+            }
+        );
+    }
+}
