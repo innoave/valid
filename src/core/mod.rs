@@ -161,7 +161,8 @@ mod private {
 
 /// Trait to mark structs as context for validation functions.
 ///
-/// This trait is sealed an can not be implemented for types outside this crate.
+/// This trait is sealed and can not be implemented for types outside this
+/// crate.
 pub trait Context: private::Sealed {}
 
 /// Represents the field level context for validation functions. Its value is
