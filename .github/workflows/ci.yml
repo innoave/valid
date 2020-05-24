@@ -30,7 +30,25 @@ jobs:
           override: true
 
       - name: Build
-        run: cargo build --workspace --verbose
+        run: cargo build --verbose
 
       - name: Run tests
-        run: cargo test --workspace --verbose --no-fail-fast
+        run: cargo test --verbose --no-fail-fast
+
+      - name: Run tests --all-features
+        run: cargo test --all-features --verbose --no-fail-fast
+
+      - name: Run tests --features "serde1"
+        run: cargo test --features "serde1" --verbose --no-fail-fast
+
+      - name: Run tests --features "bigint"
+        run: cargo test --features "bigint" --verbose --no-fail-fast
+
+      - name: Run tests --features "bigdecimal"
+        run: cargo test --features "bigdecimal" --verbose --no-fail-fast
+
+      - name: Run tests --features "chrono"
+        run: cargo test --features "chrono" --verbose --no-fail-fast
+
+      - name: Run tests --features "regex"
+        run: cargo test --features "regex" --verbose --no-fail-fast

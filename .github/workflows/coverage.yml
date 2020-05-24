@@ -27,7 +27,7 @@ jobs:
         uses: actions-rs/tarpaulin@v0.1
         with:
           timeout: 120
-          args: '--ignore-tests'
+          args: '--ignore-tests --all-features --verbose'
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1.0.2

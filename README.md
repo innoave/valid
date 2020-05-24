@@ -37,7 +37,7 @@ our custom types through composition of available validators. Any custom written
 again can be used to build validations for even more complex types.
 
 The `valid` crate defines the types and traits to implement validation functions and use them to
-validate our values. Additionally it defines primitive constraints.
+validate our values. Additionally, it defines primitive constraints.
  
 Most primitive constraints validate one property of the validated type. E.g. the `Length` constraint
 validates the length property of strings, container types or slices. If the constraint property is

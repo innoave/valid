@@ -13,11 +13,15 @@ user of an application.
 
 keywords = ["validate", "user-input", "business-rules", "constraints", "validation"]
 categories = ["rust-patterns", "value-formatting"]
+
 documentation = "https://docs.rs/valid"
 repository = "https://github.com/innoave/valid"
 readme = "README.md"
 
 edition = "2018"
+
+[package.metadata.docs.rs]
+all-features = true
 
 [features]
 default = []
@@ -36,6 +40,3 @@ serde = { version = "1", optional = true, features = ["derive"] }
 failure = "0.1"
 proptest = "0.9"
 version-sync = "0.9"
-
-[package.metadata.docs.rs]
-all-features = true
