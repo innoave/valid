@@ -4,6 +4,19 @@ All user visible changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/), as described
 for Rust libraries in [RFC #1105](https://github.com/rust-lang/rfcs/blob/master/text/1105-api-evolution.md)
 
+## 0.3.1 : 2020-05-24
+
+### Fixes
+
+* implementations of traits `Clone`, `Copy`, `PartialEq`, `Eq` and `Debug` for `Validated<C, T>`
+  no longer require type parameter `C` to implement those traits.
+  
+### Internal
+
+* fix clippy warnings
+* bump versions of dev-dependencies
+* deny unsafe code (instead of warn)
+
 
 ## 0.3.0 : 2019-09-07
 
@@ -39,6 +52,7 @@ for Rust libraries in [RFC #1105](https://github.com/rust-lang/rfcs/blob/master/
 
 * make struct `Parameter` public (issue #3)
 * minor fixes in documentation
+
 
 ## 0.1.0 : 2019-09-04
 

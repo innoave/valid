@@ -110,7 +110,6 @@ use std::ops::Deref;
 ///       We need this method for custom implementations of the `Validate`
 ///       trait. Unfortunately I have no idea how to prevent this.
 ///       Fortunately such code can be found by (automated) code review.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Validated<C, T>(PhantomData<C>, T);
 
 impl<C, T> Validated<C, T> {
@@ -119,6 +118,40 @@ impl<C, T> Validated<C, T> {
         self.1
     }
 }
+
+impl<C, T> Debug for Validated<C, T>
+where
+    T: Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("Validated")
+            .field(&format_args!("_"))
+            .field(&self.1)
+            .finish()
+    }
+}
+
+impl<C, T> PartialEq for Validated<C, T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.1.eq(&other.1)
+    }
+}
+
+impl<C, T> Eq for Validated<C, T> where T: Eq {}
+
+impl<C, T> Clone for Validated<C, T>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        Self(PhantomData, self.1.clone())
+    }
+}
+
+impl<C, T> Copy for Validated<C, T> where T: Copy {}
 
 impl<C, T> Deref for Validated<C, T> {
     type Target = T;
@@ -895,6 +928,7 @@ impl Display for InvalidState {
 /// [`serde`]: https://crates.io/crates/serde
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
+#[allow(clippy::large_enum_variant)]
 pub enum ConstraintViolation {
     /// Violation of a constraint validated in the `FieldName` context
     Field(InvalidValue),
