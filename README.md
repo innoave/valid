@@ -3,27 +3,24 @@
 [![Latest Release]][crates.io]
 [![Documentation]][docs.rs]
 [![License]](LICENSE)
-[![Linux Build Status]][travis-ci]
-[![Windows Build Status]][appveyor-ci]
+[![Build Status]][actions]
 [![Test Coverage]][codecov]
-[![Rustc Version 1.35+]][rustc-notes]
+[![Rustc Version 1.39+]][Rust 1.39]
 
 [Latest Release]: https://img.shields.io/crates/v/valid.svg
 [Documentation]: https://docs.rs/valid/badge.svg
 [License]: https://img.shields.io/badge/license-MIT%2FApache_2.0-blue.svg
-[Linux Build Status]: https://travis-ci.org/innoave/valid.svg?branch=master
-[Windows Build Status]: https://ci.appveyor.com/api/projects/status/github/innoave/valid?branch=master&svg=true
+[Build Status]: https://img.shields.io/github/workflow/status/innoave/valid/CI/master
 [Test Coverage]: https://codecov.io/gh/innoave/valid/branch/master/graph/badge.svg
-[Rustc Version 1.35+]: https://img.shields.io/badge/rustc-1.35+-lightgray.svg
+[Rustc Version 1.39+]: https://img.shields.io/badge/rustc-1.39+-lightgray.svg
 
 [crates.io]: https://crates.io/crates/valid/
 [docs.rs]: https://docs.rs/valid
 [MIT]: https://opensource.org/licenses/MIT
 [Apache-2.0]: https://www.apache.org/licenses/LICENSE-2.0
-[travis-ci]: https://travis-ci.org/innoave/valid/
-[appveyor-ci]: https://ci.appveyor.com/project/innoave/valid
+[actions]: https://github.com/innoave/valid/actions?query=branch%3Amaster
 [codecov]: https://codecov.io/github/innoave/valid?branch=master
-[rustc-notes]: https://blog.rust-lang.org/2019/05/23/Rust-1.35.0.html
+[Rust 1.39]: https://blog.rust-lang.org/2019/11/07/Rust-1.39.0.html
 
 **Let the business logic only accept valid values!**
 

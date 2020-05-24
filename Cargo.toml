@@ -19,9 +19,6 @@ readme = "README.md"
 
 edition = "2018"
 
-[badges]
-maintenance = { status = "actively-developed" }
-
 [features]
 default = []
 bigint = ["num-bigint", "num-traits"]
