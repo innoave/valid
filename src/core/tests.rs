@@ -29,6 +29,19 @@ mod validated {
 
         assert_eq!(inner_value, "some validated text");
     }
+
+    #[test]
+    fn implements_debug() {
+        struct Isbn;
+
+        let validated: Validated<Isbn, String> =
+            Validated(PhantomData, "2839-234892-222".to_string());
+
+        assert_eq!(
+            format!("{:?}", validated),
+            r#"Validated(_, "2839-234892-222")"#
+        );
+    }
 }
 
 mod context {
