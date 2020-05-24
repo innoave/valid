@@ -562,6 +562,7 @@
 //! [`serde`]: https://crates.io/crates/serde
 
 #![doc(html_root_url = "https://docs.rs/valid/0.3.0")]
+#![deny(unsafe_code)]
 #![warn(
     bare_trait_objects,
     missing_copy_implementations,
@@ -570,7 +571,6 @@
     rust_2018_idioms,
     trivial_casts,
     trivial_numeric_casts,
-    unsafe_code,
     unstable_features,
     unused_extern_crates,
     unused_import_braces,
