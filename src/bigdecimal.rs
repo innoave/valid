@@ -1,16 +1,15 @@
 use crate::property::HasDecimalDigits;
 use bigdecimal::BigDecimal;
+use std::cmp::Ordering;
 
 impl HasDecimalDigits for BigDecimal {
     fn integer_digits(&self) -> u64 {
         let (_, exponent) = self.as_bigint_and_exponent();
         let num_digits = self.digits();
-        if exponent > 0 {
-            num_digits - exponent as u64
-        } else if exponent < 0 {
-            num_digits + exponent.abs() as u64
-        } else {
-            num_digits
+        match 0.cmp(&exponent) {
+            Ordering::Less => num_digits - exponent as u64,
+            Ordering::Equal => num_digits,
+            Ordering::Greater => num_digits + exponent.abs() as u64,
         }
     }
 

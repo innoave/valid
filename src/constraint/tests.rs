@@ -471,7 +471,7 @@ mod char_count {
     fn validate_exact_char_count_on_a_compliant_string() {
         let text = "I ❤ you";
         assert_eq!(text.len(), 9);
-        let original = text.clone();
+        let original = text;
 
         let result = text.validate("message", &CharCount::Exact(7)).result();
 
@@ -528,7 +528,7 @@ mod char_count {
     fn validate_max_char_count_on_a_compliant_string() {
         let text = "I ❤ you";
         assert_eq!(text.len(), 9);
-        let original = text.clone();
+        let original = text;
 
         let result = text.validate("message", &CharCount::Max(7)).result();
 
@@ -562,7 +562,7 @@ mod char_count {
     fn validate_min_char_count_on_a_compliant_string() {
         let text = "I ❤ you!";
         assert_eq!(text.len(), 10);
-        let original = text.clone();
+        let original = text;
 
         let result = text.validate("message", &CharCount::Min(8)).result();
 
@@ -596,7 +596,7 @@ mod char_count {
     fn validate_minmax_char_count_on_a_compliant_string() {
         let text = "I ❤ you";
         assert_eq!(text.len(), 9);
-        let original = text.clone();
+        let original = text;
 
         let result = text.validate("message", &CharCount::MinMax(6, 7)).result();
 
@@ -655,6 +655,7 @@ mod bound {
 
     proptest! {
         #[test]
+        #[allow(clippy::float_cmp)]
         fn validate_bound_exact_on_a_compliant_float_value(
             exact_bound in any::<f32>()
         ) {
@@ -932,7 +933,8 @@ mod non_zero {
 
     proptest! {
         #[test]
-        fn validate_non_zeor_on_a_double_that_is_not_zero(
+        #[allow(clippy::float_cmp)]
+        fn validate_non_zero_on_a_double_that_is_not_zero(
             field_value in any::<f64>().prop_filter("non zero values", |v| *v != 0.)
         ) {
             let result = field_value.validate("field_value", &NonZero).result();
@@ -1107,7 +1109,7 @@ mod must_match {
                     },
                     field2: Field {
                         name: "repeated".into(),
-                        actual: Some(Value::String(input.clone() + &diff)),
+                        actual: Some(Value::String(input + &diff)),
                         expected: None,
                     },
                 })]

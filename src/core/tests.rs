@@ -601,7 +601,7 @@ mod value {
     #[cfg(feature = "chrono")]
     #[test]
     fn display_format_a_value_of_date_time() {
-        let value = Value::DateTime(Utc.ymd(2019, 8, 31).and_hms(12, 02, 59));
+        let value = Value::DateTime(Utc.ymd(2019, 8, 31).and_hms(12, 2, 59));
 
         assert_eq!(value.to_string(), "2019-08-31 12:02:59 UTC");
     }
