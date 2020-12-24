@@ -562,7 +562,7 @@
 //! [`serde`]: https://crates.io/crates/serde
 
 #![doc(html_root_url = "https://docs.rs/valid/0.3.1")]
-#![deny(unsafe_code)]
+#![deny(unsafe_code, unstable_features)]
 #![warn(
     bare_trait_objects,
     missing_copy_implementations,
@@ -571,10 +571,11 @@
     rust_2018_idioms,
     trivial_casts,
     trivial_numeric_casts,
-    unstable_features,
+    unused_crate_dependencies,
     unused_extern_crates,
     unused_import_braces,
-    unused_qualifications
+    unused_qualifications,
+    variant_size_differences
 )]
 
 #[cfg(feature = "bigdecimal")]
@@ -593,3 +594,9 @@ pub use crate::core::{
     RelatedFields, State, Validate, Validated, Validation, ValidationError, ValidationResult,
     Value,
 };
+
+#[cfg(test)]
+mod tests {
+    use failure as _;
+    use version_sync as _;
+}
