@@ -9,9 +9,17 @@ Cargo.lock
 /*.launch
 
 # Intellij IDEA
-*.iml
 .idea/*
 !.idea/runConfigurations/
+*.iml
+
+# VS Code
+.vscode/
 
 # Sublime Text
 *.sublime-workspace
+
+# Cargo Mutants
+mutants.out/
+mutants.out.old/
+
